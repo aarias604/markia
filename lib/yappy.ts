@@ -19,11 +19,24 @@ interface YappyResponse {
   body?: Record<string, unknown> | null;
 }
 
-function yappyError(json: YappyResponse | null, fallback: string) {
+function yappyError(json: YappyResponse | null, fallback: string, httpStatus?: number, rawText?: string) {
   const code = json?.status?.code;
   if (code && MESSAGES[code]) return `${MESSAGES[code]} (${code})`;
   if (code) return `${fallback} (${code}${json?.status?.description ? `: ${json.status.description}` : ""})`;
-  return fallback;
+  const env = IS_PROD ? "prod" : "uat";
+  const detail = rawText ? ` Respuesta: ${rawText.slice(0, 160)}` : "";
+  return `${fallback} [ambiente ${env}, HTTP ${httpStatus ?? "?"}]${detail}`;
+}
+
+async function readJson(res: Response) {
+  const text = await res.text().catch(() => "");
+  let json: YappyResponse | null = null;
+  try {
+    json = JSON.parse(text) as YappyResponse;
+  } catch {
+    json = null;
+  }
+  return { json, text };
 }
 
 /** Dominio exacto registrado en Yappy, sin "/" al final. */
@@ -52,10 +65,13 @@ export async function createYappyOrder({ orderId, total }: { orderId: string; to
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ merchantId, urlDomain: domain }),
   });
-  const validate = (await validateRes.json().catch(() => null)) as YappyResponse | null;
+  const { json: validate, text: validateText } = await readJson(validateRes);
   const token = validate?.body?.token;
   if (!validateRes.ok || typeof token !== "string") {
-    throw new Error(yappyError(validate, "Yappy no validó el comercio. Revisa el ID de comercio y el dominio registrado."));
+    console.error("[yappy] validate/merchant", validateRes.status, validateText.slice(0, 500), { domain });
+    throw new Error(
+      yappyError(validate, "Yappy no validó el comercio.", validateRes.status, validateText) + ` Dominio enviado: ${domain}`
+    );
   }
 
   // Paso 2: crear la orden
@@ -77,10 +93,11 @@ export async function createYappyOrder({ orderId, total }: { orderId: string; to
     headers: { "Content-Type": "application/json", Authorization: token },
     body: JSON.stringify(order),
   });
-  const created = (await orderRes.json().catch(() => null)) as YappyResponse | null;
+  const { json: created, text: createdText } = await readJson(orderRes);
   const body = created?.body;
   if (!orderRes.ok || !body?.transactionId) {
-    throw new Error(yappyError(created, "Yappy no pudo crear la orden."));
+    console.error("[yappy] payment-wc", orderRes.status, createdText.slice(0, 500));
+    throw new Error(yappyError(created, "Yappy no pudo crear la orden.", orderRes.status, createdText));
   }
 
   return {
