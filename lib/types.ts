@@ -46,6 +46,7 @@ export interface Profile {
   id: string;
   full_name: string | null;
   business_name: string | null;
+  phone?: string | null;
   onboarding_completed: boolean;
 }
 

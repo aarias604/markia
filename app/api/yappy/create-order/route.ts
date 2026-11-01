@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { createYappyOrder, newOrderId } from "@/lib/yappy";
+import { createYappyOrder, newOrderId, normalizePhone } from "@/lib/yappy";
 
 function fail(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
@@ -20,8 +20,18 @@ export async function POST(request: Request) {
   } = await supabase.auth.getUser();
   if (!user) return fail("Tu sesión venció. Vuelve a iniciar sesión.", 401);
 
-  const body = (await request.json().catch(() => null)) as { kind?: string; planId?: string; addonId?: string } | null;
+  const body = (await request.json().catch(() => null)) as {
+    kind?: string;
+    planId?: string;
+    addonId?: string;
+    phone?: string;
+  } | null;
   if (!body || (body.kind !== "subscription" && body.kind !== "addon")) return fail("Solicitud inválida.", 400);
+
+  const phone = normalizePhone(body.phone);
+  if (!phone) return fail("Escribe tu número de celular de Yappy: 8 dígitos que empiezan con 6.", 400);
+  // Lo guardamos para no pedirlo la próxima vez.
+  await supabase.from("profiles").update({ phone }).eq("id", user.id);
 
   const admin = createAdminClient();
 
@@ -42,7 +52,7 @@ export async function POST(request: Request) {
 
   // 3. Crear la orden en Yappy
   try {
-    const order = await createYappyOrder({ orderId, total: (payment.amount_cents / 100).toFixed(2) });
+    const order = await createYappyOrder({ orderId, total: (payment.amount_cents / 100).toFixed(2), phone });
     return NextResponse.json({ ...order, paymentId: payment.id, amountCents: payment.amount_cents });
   } catch (e) {
     await admin.from("payments").update({ status: "failed" }).eq("id", payment.id);

@@ -6,8 +6,14 @@
 // 3) Esperamos la confirmación (IPN) consultando /api/yappy/status.
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { CheckCircle2, Clock, Loader2, X } from "lucide-react";
-import { errorCls } from "@/lib/ui";
+import { CheckCircle2, Clock, Loader2, Smartphone, X } from "lucide-react";
+import { useDashboard } from "@/components/dashboard/DashboardContext";
+import { errorCls, inputCls, labelCls } from "@/lib/ui";
+
+function cleanPhone(raw: string) {
+  const digits = raw.replace(/\D/g, "").replace(/^507/, "");
+  return /^6\d{7}$/.test(digits) ? digits : null;
+}
 
 const CDN =
   process.env.NEXT_PUBLIC_YAPPY_ENV === "prod"
@@ -43,6 +49,9 @@ interface Props {
 }
 
 export function YappyCheckout({ open, onClose, title, description, amountLabel, request, onPaid }: Props) {
+  const { profile } = useDashboard();
+  const [phone, setPhone] = useState(profile?.phone ?? "");
+  const phoneRef = useRef(phone);
   const holder = useRef<HTMLDivElement>(null);
   const requestRef = useRef(request);
   const paymentId = useRef<string | null>(null);
@@ -54,6 +63,7 @@ export function YappyCheckout({ open, onClose, title, description, amountLabel, 
   useEffect(() => {
     requestRef.current = request;
     onPaidRef.current = onPaid;
+    phoneRef.current = phone;
   });
 
   useEffect(() => {
@@ -92,12 +102,17 @@ export function YappyCheckout({ open, onClose, title, description, amountLabel, 
 
     const onClick = async () => {
       setError(null);
+      const validPhone = cleanPhone(phoneRef.current);
+      if (!validPhone) {
+        setError("Escribe tu número de celular de Yappy: 8 dígitos que empiezan con 6.");
+        return;
+      }
       btn.isButtonLoading = true;
       try {
         const res = await fetch("/api/yappy/create-order", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(requestRef.current),
+          body: JSON.stringify({ ...requestRef.current, phone: validPhone }),
         });
         const json = (await res.json().catch(() => ({}))) as {
           error?: string;
@@ -169,10 +184,25 @@ export function YappyCheckout({ open, onClose, title, description, amountLabel, 
               <span className="text-2xl font-bold">{amountLabel}</span>
             </div>
 
-            <div className={stage === "ready" ? "mt-6" : "hidden"}>
-              <div ref={holder} className="flex min-h-12 justify-center" />
+            <div className={stage === "ready" ? "mt-5" : "hidden"}>
+              <label htmlFor="yappy-phone" className={labelCls}>Tu número de celular con Yappy</label>
+              <div className="relative">
+                <Smartphone className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#4A154B]/40" />
+                <input
+                  id="yappy-phone"
+                  type="tel"
+                  inputMode="numeric"
+                  autoComplete="tel"
+                  maxLength={9}
+                  placeholder="6000-0000"
+                  className={`${inputCls} pl-9 text-base tracking-wide`}
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                />
+              </div>
+              <div ref={holder} className="mt-5 flex min-h-12 justify-center" />
               <p className="mt-3 text-center text-xs text-[#4A154B]/60">
-                Toca el botón y confirma el pago en tu app de Yappy.
+                Te llegará una solicitud de pago a tu app de Yappy. Ábrela y confírmala.
               </p>
             </div>
 

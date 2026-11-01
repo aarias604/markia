@@ -49,7 +49,13 @@ export function newOrderId() {
   return ("MK" + crypto.randomBytes(8).toString("hex")).toUpperCase().slice(0, 15);
 }
 
-export async function createYappyOrder({ orderId, total }: { orderId: string; total: string }) {
+/** Celular panameño de 8 dígitos que empieza con 6 (sin +507). */
+export function normalizePhone(raw: unknown): string | null {
+  const digits = String(raw ?? "").replace(/\D/g, "").replace(/^507/, "");
+  return /^6\d{7}$/.test(digits) ? digits : null;
+}
+
+export async function createYappyOrder({ orderId, total, phone }: { orderId: string; total: string; phone: string }) {
   const merchantId = process.env.YAPPY_MERCHANT_ID;
   if (!merchantId || !process.env.YAPPY_SECRET_KEY) {
     throw new Error("Faltan YAPPY_MERCHANT_ID o YAPPY_SECRET_KEY en las variables de entorno.");
@@ -80,13 +86,14 @@ export async function createYappyOrder({ orderId, total }: { orderId: string; to
     orderId,
     domain,
     paymentDate: validate?.body?.epochTime ?? Math.floor(Date.now() / 1000),
+    aliasYappy: IS_PROD ? phone : process.env.YAPPY_TEST_ALIAS || phone,
     ipnUrl: `${domain}/api/yappy/ipn`,
+    shipping: "0.00",
     discount: "0.00",
     taxes: "0.00",
     subtotal: total,
     total,
   };
-  if (process.env.YAPPY_TEST_ALIAS) order.aliasYappy = process.env.YAPPY_TEST_ALIAS;
 
   const orderRes = await fetch(`${API}/payments/payment-wc`, {
     method: "POST",
