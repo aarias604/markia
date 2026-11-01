@@ -47,6 +47,7 @@ export interface Profile {
   full_name: string | null;
   business_name: string | null;
   phone?: string | null;
+  is_admin?: boolean;
   onboarding_completed: boolean;
 }
 

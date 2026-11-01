@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
-import { Loader2, MailCheck } from "lucide-react";
+import { useEffect, useState, type FormEvent } from "react";
+import { Gift, Loader2, MailCheck } from "lucide-react";
 import { AuthShell, traducirError } from "@/components/auth/AuthShell";
+import { readStoredRef } from "@/components/legal/RefCapture";
+import { LEGAL } from "@/lib/legal";
 import { createClient } from "@/lib/supabase/client";
 import { btnPrimary, errorCls, inputCls, labelCls } from "@/lib/ui";
 
@@ -16,12 +18,22 @@ export default function RegistroPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sentTo, setSentTo] = useState<string | null>(null);
+  const [accepted, setAccepted] = useState(false);
+  const [refCode, setRefCode] = useState<string | null>(null);
+
+  useEffect(() => {
+    setRefCode(readStoredRef());
+  }, []);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
     if (password.length < 8) {
       setError("La contraseña debe tener al menos 8 caracteres.");
+      return;
+    }
+    if (!accepted) {
+      setError("Debes aceptar los Términos y Condiciones y la Política de Privacidad.");
       return;
     }
     setLoading(true);
@@ -31,7 +43,11 @@ export default function RegistroPage() {
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/auth/callback?next=/onboarding`,
-        data: { full_name: fullName.trim() },
+        data: {
+          full_name: fullName.trim(),
+          terms_version: LEGAL.version,
+          ...(refCode ? { ref: refCode } : {}),
+        },
       },
     });
     setLoading(false);
@@ -86,9 +102,26 @@ export default function RegistroPage() {
             value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Mínimo 8 caracteres" />
         </div>
 
+        <label className="flex items-start gap-3 text-sm">
+          <input type="checkbox" className="mt-1 h-4 w-4 accent-[#4A154B]" checked={accepted}
+            onChange={(e) => setAccepted(e.target.checked)} />
+          <span>
+            Soy mayor de 18 años y acepto los{" "}
+            <Link href="/legal/terminos" target="_blank" className="font-semibold underline">Términos y Condiciones</Link> y la{" "}
+            <Link href="/legal/privacidad" target="_blank" className="font-semibold underline">Política de Privacidad</Link>, incluido
+            el tratamiento de mis datos por proveedores fuera de Panamá para prestar el servicio.
+          </span>
+        </label>
+
+        {refCode && (
+          <p className="flex items-center gap-2 rounded-xl bg-[#D9B382]/20 px-4 py-2 text-sm">
+            <Gift className="h-4 w-4 text-[#8C338A]" /> Te registras con el código de referido <strong>{refCode}</strong>
+          </p>
+        )}
+
         {error && <p className={errorCls}>{error}</p>}
 
-        <button type="submit" disabled={loading} className={`${btnPrimary} w-full`}>
+        <button type="submit" disabled={loading || !accepted} className={`${btnPrimary} w-full`}>
           {loading && <Loader2 className="h-4 w-4 animate-spin" />}
           {loading ? "Creando cuenta…" : "Crear cuenta"}
         </button>

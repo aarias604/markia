@@ -11,10 +11,13 @@ import {
   LogOut,
   Menu,
   Palette,
+  Gift,
+  ShieldCheck,
   ShoppingBag,
   Sparkles,
   X,
 } from "lucide-react";
+import { LEGAL_PAGES } from "@/components/legal/LegalShell";
 import { MarkiaLogo } from "@/components/ui/MarkiaLogo";
 import { YappyRenewalBanner } from "@/components/billing/YappyRenewalBanner";
 import { useDashboard } from "@/components/dashboard/DashboardContext";
@@ -28,13 +31,15 @@ const NAV = [
   { href: "/dashboard/marca", label: "Kit de marca", icon: Palette },
   { href: "/dashboard/planes", label: "Planes", icon: CreditCard },
   { href: "/dashboard/tienda", label: "Tienda", icon: ShoppingBag },
+  { href: "/dashboard/referidos", label: "Referidos", icon: Gift },
 ];
 
-function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
+function NavLinks({ onNavigate, isAdmin }: { onNavigate?: () => void; isAdmin: boolean }) {
   const pathname = usePathname();
+  const items = isAdmin ? [...NAV, { href: "/dashboard/admin", label: "Administración", icon: ShieldCheck }] : NAV;
   return (
     <nav className="flex flex-col gap-1">
-      {NAV.map((item) => {
+      {items.map((item) => {
         const active = item.href === "/dashboard" ? pathname === item.href : pathname.startsWith(item.href);
         return (
           <Link
@@ -56,7 +61,7 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
 
 export function DashboardShell({ children }: { children: ReactNode }) {
   const router = useRouter();
-  const { billing, businessName, logoDataUrl, email, subscription, refresh } = useDashboard();
+  const { billing, businessName, logoDataUrl, email, subscription, refresh, profile } = useDashboard();
   const [open, setOpen] = useState(false);
 
   async function logout() {
@@ -70,8 +75,15 @@ export function DashboardShell({ children }: { children: ReactNode }) {
       <div className="mb-8 px-2 pt-2">
         <MarkiaLogo light />
       </div>
-      <NavLinks onNavigate={() => setOpen(false)} />
+      <NavLinks onNavigate={() => setOpen(false)} isAdmin={!!profile?.is_admin} />
       <div className="mt-auto space-y-3 border-t border-white/10 pt-4">
+        <div className="flex flex-wrap gap-x-3 gap-y-1 px-2 text-[11px] text-[#FAF5EF]/50">
+          {LEGAL_PAGES.slice(0, 3).map((p, i) => (
+            <Link key={p.href} href={p.href} target="_blank" className="hover:text-[#FAF5EF]">
+              {["Términos", "Privacidad", "Reembolsos"][i]}
+            </Link>
+          ))}
+        </div>
         <p className="truncate px-2 text-xs text-[#FAF5EF]/60">{email}</p>
         <button
           onClick={logout}

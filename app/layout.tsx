@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
+import { CookieNotice } from "@/components/legal/CookieNotice";
+import { RefCapture } from "@/components/legal/RefCapture";
 
 export const metadata: Metadata = {
   title: "Markia · Tu marca en redes, en piloto automático",
@@ -10,7 +12,11 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="es">
-      <body className="min-h-screen antialiased">{children}</body>
+      <body className="min-h-screen antialiased">
+        {children}
+        <CookieNotice />
+        <RefCapture />
+      </body>
     </html>
   );
 }

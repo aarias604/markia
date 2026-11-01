@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { CheckCircle2, Clock, Loader2, Smartphone, X } from "lucide-react";
 import { useDashboard } from "@/components/dashboard/DashboardContext";
+import { CryptoPay } from "@/components/billing/CryptoPay";
 import { errorCls, inputCls, labelCls } from "@/lib/ui";
 
 function cleanPhone(raw: string) {
@@ -57,6 +58,7 @@ export function YappyCheckout({ open, onClose, title, description, amountLabel, 
   const paymentId = useRef<string | null>(null);
   const onPaidRef = useRef(onPaid);
   const [stage, setStage] = useState<Stage>("ready");
+  const [method, setMethod] = useState<"yappy" | "crypto">("yappy");
   const [error, setError] = useState<string | null>(null);
   const [offline, setOffline] = useState(false);
 
@@ -184,7 +186,20 @@ export function YappyCheckout({ open, onClose, title, description, amountLabel, 
               <span className="text-2xl font-bold">{amountLabel}</span>
             </div>
 
-            <div className={stage === "ready" ? "mt-5" : "hidden"}>
+            {stage === "ready" && (
+              <div className="mt-5 grid grid-cols-2 gap-1 rounded-full bg-[#4A154B]/5 p-1 text-sm font-semibold">
+                {(["yappy", "crypto"] as const).map((m) => (
+                  <button key={m} onClick={() => setMethod(m)}
+                    className={`rounded-full py-2 transition ${method === m ? "bg-white shadow" : "text-[#4A154B]/60"}`}>
+                    {m === "yappy" ? "Yappy" : "Cripto (USDT)"}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {stage === "ready" && method === "crypto" && <CryptoPay request={request} />}
+
+            <div className={stage === "ready" && method === "yappy" ? "mt-5" : "hidden"}>
               <label htmlFor="yappy-phone" className={labelCls}>Tu número de celular con Yappy</label>
               <div className="relative">
                 <Smartphone className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#4A154B]/40" />
@@ -231,10 +246,10 @@ export function YappyCheckout({ open, onClose, title, description, amountLabel, 
               </div>
             )}
 
-            {offline && stage === "ready" && (
+            {offline && stage === "ready" && method === "yappy" && (
               <p className="mt-4 text-center text-xs text-amber-700">Yappy no está disponible en este momento.</p>
             )}
-            {error && <p className={`${errorCls} mt-4`}>{error}</p>}
+            {error && method === "yappy" && <p className={`${errorCls} mt-4`}>{error}</p>}
           </motion.div>
         </motion.div>
       )}
