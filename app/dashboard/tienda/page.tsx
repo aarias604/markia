@@ -30,9 +30,9 @@ const INFO: Record<string, { icon: typeof Zap; text: string; needsPlan: boolean;
   },
   logo_service: {
     icon: Palette,
-    text: "Diseñamos con IA un logo y una paleta de colores para tu marca. Te contactamos por correo en 48 horas hábiles.",
+    text: "La IA crea tu logo en 3 versiones (principal, ícono y monocromo), una paleta de 5 colores, 2 tipografías y una guía de uso. Lo recibes al instante en tu correo y en tu cuenta. Incluye 1 ajuste.",
     needsPlan: false,
-    after: "¡Gracias! Te escribiremos al correo de tu cuenta en 48 horas hábiles.",
+    after: "¡Pago confirmado! Entra a «Marca con IA» en el menú para crear tu marca.",
   },
 };
 

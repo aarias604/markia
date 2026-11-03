@@ -1,15 +1,16 @@
 "use client";
 
-// Tarjeta de una publicación: imagen, textos editables, programación, descarga y borrado.
+// Tarjeta de una publicación o carrusel: imágenes, descripción sugerida, programación,
+// descarga (imágenes PNG + descripción en .txt) y borrado.
 import { useRef, useState } from "react";
-import { CalendarClock, Check, Copy, Download, Loader2, Trash2 } from "lucide-react";
+import { CalendarClock, Check, Copy, Download, Layers, Loader2, Trash2 } from "lucide-react";
 import { PostImage } from "@/components/posts/PostImage";
 import { useDashboard } from "@/components/dashboard/DashboardContext";
-import { downloadSvgAsPng, slugify } from "@/lib/download";
+import { downloadSvgAsPng, downloadText, slugify, wait } from "@/lib/download";
 import { STATUS_INFO, toLocalInputValue } from "@/lib/posts";
 import { createClient } from "@/lib/supabase/client";
-import type { Post, PostStatus } from "@/lib/types";
-import { btnPrimary, btnSecondary, errorCls, inputCls, labelCls } from "@/lib/ui";
+import type { Post, PostStatus, Slide } from "@/lib/types";
+import { btnGold, btnPrimary, btnSecondary, errorCls, inputCls, labelCls } from "@/lib/ui";
 
 interface Props {
   post: Post;
@@ -19,17 +20,22 @@ interface Props {
 
 export function PostCard({ post, onUpdated, onDeleted }: Props) {
   const { kit, logoDataUrl, templates, businessName } = useDashboard();
-  const svgRef = useRef<SVGSVGElement>(null);
+  const isCarousel = post.format === "carousel" && Array.isArray(post.slides) && post.slides.length > 0;
+  const svgRefs = useRef<(SVGSVGElement | null)[]>([]);
   const [caption, setCaption] = useState(post.caption ?? "");
   const [headline, setHeadline] = useState(post.image_headline ?? "");
   const [subtext, setSubtext] = useState(post.image_subtext ?? "");
+  const [slides, setSlides] = useState<Slide[]>(post.slides ?? []);
   const [when, setWhen] = useState(post.scheduled_at ? toLocalInputValue(post.scheduled_at) : "");
   const [busy, setBusy] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const template = templates.find((t) => t.id === post.template_id) ?? templates[0];
+  const fullDescription = `${caption}\n\n${post.hashtags.join(" ")}`.trim();
+  const baseName = slugify(post.title || headline || "publicacion");
 
   async function save(patch: Partial<Post>) {
     setBusy(true);
@@ -44,6 +50,14 @@ export function PostCard({ post, onUpdated, onDeleted }: Props) {
     if ((post[field] ?? "") !== value) void save({ [field]: value } as Partial<Post>);
   }
 
+  function updateSlide(i: number, key: keyof Slide, value: string) {
+    setSlides((s) => s.map((sl, j) => (j === i ? { ...sl, [key]: value } : sl)));
+  }
+
+  function saveSlides() {
+    if (JSON.stringify(slides) !== JSON.stringify(post.slides ?? [])) void save({ slides });
+  }
+
   async function schedule() {
     if (!when) return setError("Elige la fecha y la hora.");
     const status: PostStatus = post.status === "published" ? "published" : "scheduled";
@@ -51,17 +65,26 @@ export function PostCard({ post, onUpdated, onDeleted }: Props) {
   }
 
   async function copy() {
-    await navigator.clipboard.writeText(`${caption}\n\n${post.hashtags.join(" ")}`);
+    await navigator.clipboard.writeText(fullDescription);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
 
-  async function download() {
-    if (!svgRef.current) return;
+  /** Descarga las imágenes en PNG y la descripción sugerida en .txt. */
+  async function downloadAll() {
+    setDownloading(true);
+    setError(null);
     try {
-      await downloadSvgAsPng(svgRef.current, slugify(post.title || headline));
+      const svgs = svgRefs.current.filter((s): s is SVGSVGElement => !!s);
+      for (let i = 0; i < svgs.length; i++) {
+        await downloadSvgAsPng(svgs[i], isCarousel ? `${baseName}-${i + 1}` : baseName);
+        await wait(400);
+      }
+      downloadText(fullDescription, `${baseName}-descripcion`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "No se pudo descargar.");
+    } finally {
+      setDownloading(false);
     }
   }
 
@@ -74,55 +97,106 @@ export function PostCard({ post, onUpdated, onDeleted }: Props) {
   }
 
   const status = STATUS_INFO[post.status];
+  const images =
+    kit && template ? (
+      isCarousel ? (
+        <div className="flex snap-x gap-3 overflow-x-auto pb-2">
+          {slides.map((s, i) => (
+            <div key={i} className="w-60 shrink-0 snap-start overflow-hidden rounded-xl shadow">
+              <PostImage
+                ref={(el) => {
+                  svgRefs.current[i] = el;
+                }}
+                definition={template.definition}
+                colors={kit}
+                logoUrl={logoDataUrl}
+                brandName={businessName}
+                headline={s.titulo}
+                subtext={s.texto}
+                badge={`${i + 1}/${slides.length}`}
+              />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="overflow-hidden rounded-xl shadow">
+          <PostImage
+            ref={(el) => {
+              svgRefs.current[0] = el;
+            }}
+            definition={template.definition}
+            colors={kit}
+            logoUrl={logoDataUrl}
+            brandName={businessName}
+            headline={headline}
+            subtext={subtext}
+          />
+        </div>
+      )
+    ) : (
+      <div className="flex aspect-square items-center justify-center rounded-xl bg-white p-4 text-center text-xs text-[#4A154B]/60">
+        Corre las migraciones en Supabase para tener plantillas.
+      </div>
+    );
 
   return (
-    <article className="grid gap-5 rounded-2xl border border-[#D9B382]/40 bg-[#FDFBF7] p-4 shadow-sm md:grid-cols-[280px_1fr]">
-      <div>
-        <div className="overflow-hidden rounded-xl shadow">
-          {kit && template ? (
-            <PostImage
-              ref={svgRef}
-              definition={template.definition}
-              colors={kit}
-              logoUrl={logoDataUrl}
-              brandName={businessName}
-              headline={headline}
-              subtext={subtext}
-            />
-          ) : (
-            <div className="flex aspect-square items-center justify-center bg-white p-4 text-center text-xs text-[#4A154B]/60">
-              Corre la migración de la Fase 6 para tener plantillas.
-            </div>
-          )}
-        </div>
+    <article className={`grid gap-5 rounded-2xl border border-[#D9B382]/40 bg-[#FDFBF7] p-4 shadow-sm ${isCarousel ? "" : "md:grid-cols-[280px_1fr]"}`}>
+      <div className="min-w-0">
+        {images}
         <div className="mt-3 flex flex-wrap gap-2">
-          <button className={`${btnSecondary} px-3 py-2`} onClick={download}>
-            <Download className="h-4 w-4" /> PNG
+          <button className={`${btnGold} px-4 py-2`} onClick={downloadAll} disabled={downloading}>
+            {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+            {isCarousel ? `Descargar ${slides.length} imágenes + descripción` : "Descargar imagen + descripción"}
           </button>
           <button className={`${btnSecondary} px-3 py-2`} onClick={copy}>
-            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />} {copied ? "Copiado" : "Copiar texto"}
+            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />} {copied ? "Copiada" : "Copiar descripción"}
           </button>
         </div>
+        {isCarousel && (
+          <p className="mt-2 text-xs text-[#4A154B]/60">
+            Si tu navegador pregunta, permite descargar varios archivos. En Instagram súbelas en orden (1, 2, 3…).
+          </p>
+        )}
       </div>
 
       <div className="min-w-0 space-y-4">
         <div className="flex items-start justify-between gap-3">
-          <h3 className="font-bold">{post.title || "Publicación"}</h3>
+          <h3 className="flex items-center gap-2 font-bold">
+            {isCarousel && <Layers className="h-4 w-4 text-[#8C338A]" />}
+            {post.title || "Publicación"}
+          </h3>
           <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${status.cls}`}>{status.label}</span>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div>
-            <label className={labelCls}>Texto de la imagen</label>
-            <input className={inputCls} value={headline} maxLength={90}
-              onChange={(e) => setHeadline(e.target.value)} onBlur={() => saveIfChanged("image_headline", headline)} />
+        {isCarousel ? (
+          <details className="rounded-xl bg-white p-3">
+            <summary className="cursor-pointer text-sm font-semibold">Editar textos de las láminas</summary>
+            <div className="mt-3 space-y-3">
+              {slides.map((s, i) => (
+                <div key={i} className="grid gap-2 sm:grid-cols-[40px_1fr_1.5fr] sm:items-center">
+                  <span className="text-xs font-bold text-[#8C338A]">{i + 1}</span>
+                  <input className={inputCls} value={s.titulo} maxLength={90}
+                    onChange={(e) => updateSlide(i, "titulo", e.target.value)} onBlur={saveSlides} />
+                  <input className={inputCls} value={s.texto} maxLength={160}
+                    onChange={(e) => updateSlide(i, "texto", e.target.value)} onBlur={saveSlides} />
+                </div>
+              ))}
+            </div>
+          </details>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label className={labelCls}>Texto de la imagen</label>
+              <input className={inputCls} value={headline} maxLength={90}
+                onChange={(e) => setHeadline(e.target.value)} onBlur={() => saveIfChanged("image_headline", headline)} />
+            </div>
+            <div>
+              <label className={labelCls}>Subtexto de la imagen</label>
+              <input className={inputCls} value={subtext} maxLength={120}
+                onChange={(e) => setSubtext(e.target.value)} onBlur={() => saveIfChanged("image_subtext", subtext)} />
+            </div>
           </div>
-          <div>
-            <label className={labelCls}>Subtexto de la imagen</label>
-            <input className={inputCls} value={subtext} maxLength={120}
-              onChange={(e) => setSubtext(e.target.value)} onBlur={() => saveIfChanged("image_subtext", subtext)} />
-          </div>
-        </div>
+        )}
 
         {templates.length > 1 && (
           <div>
@@ -138,7 +212,7 @@ export function PostCard({ post, onUpdated, onDeleted }: Props) {
         )}
 
         <div>
-          <label className={labelCls}>Texto de la publicación</label>
+          <label className={labelCls}>Descripción sugerida para Instagram</label>
           <textarea className={`${inputCls} min-h-36`} value={caption}
             onChange={(e) => setCaption(e.target.value)} onBlur={() => saveIfChanged("caption", caption)} />
           <p className="mt-1 break-words text-xs text-[#6B21A8]">{post.hashtags.join(" ")}</p>
@@ -153,6 +227,9 @@ export function PostCard({ post, onUpdated, onDeleted }: Props) {
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <CalendarClock className="h-4 w-4" />} Programar
           </button>
         </div>
+        <p className="text-xs text-[#4A154B]/60">
+          Mientras activamos la publicación automática, descarga la imagen y la descripción y súbelas a Instagram en la fecha programada. Luego márcala como publicada.
+        </p>
 
         <div className="flex flex-wrap items-center gap-3 border-t border-[#D9B382]/30 pt-3 text-sm">
           {post.status !== "published" ? (

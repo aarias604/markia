@@ -38,7 +38,7 @@ export default function ReembolsosPage() {
       <ul>
         <li><strong>Boost de 5 publicaciones:</strong> reembolsable solo si no has usado ninguna de las 5.</li>
         <li><strong>Pack de Plantillas:</strong> reembolsable solo si no has creado plantillas con los espacios comprados.</li>
-        <li><strong>Creación de Logo y Paleta:</strong> reembolsable completo si aún no empezamos el trabajo; luego, no reembolsable.</li>
+        <li><strong>Generación de Marca con IA:</strong> reembolsable completo mientras no hayas generado tu marca; una vez generada, no es reembolsable porque el servicio ya se prestó.</li>
       </ul>
 
       <h2>5. Cómo pedir un reembolso</h2>

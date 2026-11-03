@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   ShoppingBag,
   Sparkles,
+  Wand2,
   X,
 } from "lucide-react";
 import { LEGAL_PAGES } from "@/components/legal/LegalShell";
@@ -29,6 +30,7 @@ const NAV = [
   { href: "/dashboard/calendario", label: "Calendario", icon: CalendarDays },
   { href: "/dashboard/plantillas", label: "Plantillas", icon: LayoutTemplate },
   { href: "/dashboard/marca", label: "Kit de marca", icon: Palette },
+  { href: "/dashboard/marca-ia", label: "Marca con IA", icon: Wand2 },
   { href: "/dashboard/planes", label: "Planes", icon: CreditCard },
   { href: "/dashboard/tienda", label: "Tienda", icon: ShoppingBag },
   { href: "/dashboard/referidos", label: "Referidos", icon: Gift },
@@ -40,7 +42,7 @@ function NavLinks({ onNavigate, isAdmin }: { onNavigate?: () => void; isAdmin: b
   return (
     <nav className="flex flex-col gap-1">
       {items.map((item) => {
-        const active = item.href === "/dashboard" ? pathname === item.href : pathname.startsWith(item.href);
+        const active = item.href === "/dashboard" ? pathname === item.href : pathname === item.href || pathname.startsWith(item.href + "/");
         return (
           <Link
             key={item.href}

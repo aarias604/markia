@@ -11,14 +11,17 @@ import type { Plan } from "@/lib/types";
 import { btnGold } from "@/lib/ui";
 
 function features(p: Plan) {
+  const carruseles = p.monthly_carousels ?? 0;
   const list = [
     `${p.monthly_posts} publicaciones con IA al mes`,
+    `${carruseles} carrusel${carruseles === 1 ? "" : "es"} con IA al mes`,
     `${p.generic_templates} plantillas de diseño`,
+    "Descripción sugerida y hashtags en cada publicación",
     "Calendario de contenido",
     "Descarga de imágenes en PNG",
   ];
   if (p.custom_templates > 0) list.push(`${p.custom_templates} plantillas personalizadas propias`);
-  if (p.instagram_autopost) list.push("Publicación automática en Instagram");
+  if (p.instagram_autopost) list.push("Publicación automática en Instagram (próximamente)");
   return list;
 }
 

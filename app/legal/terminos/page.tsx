@@ -35,9 +35,11 @@ export default function TerminosPage() {
       <h2>4. Planes, precios y forma de pago</h2>
       <ul>
         <li>
-          <strong>Plan Básico:</strong> 10 publicaciones con IA por ciclo y 5 plantillas.{" "}
-          <strong>Plan PRO:</strong> 26 publicaciones con IA por ciclo, 5 plantillas, 5 plantillas propias y publicación
-          automática en Instagram. Los precios vigentes se muestran en la página de Planes antes de pagar.
+          <strong>Plan Básico:</strong> 10 publicaciones y 1 carrusel con IA por ciclo, y 10 plantillas.{" "}
+          <strong>Plan PRO:</strong> 26 publicaciones y 3 carruseles con IA por ciclo, 20 plantillas y 5 plantillas
+          propias. La publicación automática en Instagram del Plan PRO está en desarrollo; mientras no esté disponible,
+          puedes descargar cada publicación con su descripción sugerida. Los precios vigentes se muestran en la página de
+          Planes antes de pagar.
         </li>
         <li>Los precios están en dólares de los Estados Unidos (USD). [Confirmar con tu contador si incluyen ITBMS.]</li>
         <li>Puedes pagar con Yappy Comercial o con criptomonedas (USDT) según las instrucciones del sitio. Los pagos con cripto se confirman manualmente en un plazo de hasta 24 horas.</li>
@@ -84,9 +86,15 @@ export default function TerminosPage() {
 
       <h2>9. Servicios adicionales</h2>
       <p>
-        Los add-ons de la Tienda (Boost de publicaciones, Pack de Plantillas y Creación de Logo y Paleta) son pagos
-        únicos. El servicio de logo se entrega por correo en el plazo indicado en la Tienda e incluye una ronda de ajustes.
+        Los add-ons de la Tienda (Boost de publicaciones, Pack de Plantillas y Generación de Marca con IA) son pagos
+        únicos.
       </p>
+      <h3>Generación de Marca con IA</h3>
+      <ul>
+        <li>Incluye un logo en 3 versiones (SVG y PNG), una paleta de colores, recomendaciones de tipografías gratuitas y una guía de uso, generados por inteligencia artificial a partir de los datos que nos das. Se entrega en tu cuenta y por correo.</li>
+        <li>Incluye 1 ajuste. Los diseños son sencillos y vectoriales; no se trata de un servicio de diseñador humano.</li>
+        <li>El resultado es tuyo: puedes usarlo, modificarlo y registrarlo. Como la IA puede producir diseños parecidos a otros existentes, antes de registrarlo como marca verifica en la Dirección General del Registro de la Propiedad Industrial (DIGERPI) que no haya una marca igual o similar. {LEGAL.marca} no garantiza que el diseño sea registrable.</li>
+      </ul>
 
       <h2>10. Programa de referidos</h2>
       <p>

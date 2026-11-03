@@ -1,7 +1,24 @@
 // Tipos compartidos de Markia (reflejan las tablas de Supabase).
 
 export type ColorRole = "primary" | "secondary" | "accent" | "cream";
-export type LayoutId = "centrado" | "banda" | "esquina" | "dividido" | "marco";
+export type LayoutId =
+  | "centrado"
+  | "banda"
+  | "esquina"
+  | "dividido"
+  | "marco"
+  | "diagonal"
+  | "tarjeta"
+  | "cita"
+  | "titular"
+  | "minimal"
+  | "burbuja"
+  | "oferta";
+
+export interface Slide {
+  titulo: string;
+  texto: string;
+}
 export type PostStatus = "draft" | "scheduled" | "publishing" | "published" | "failed";
 
 export interface TemplateDefinition {
@@ -17,6 +34,7 @@ export interface Template {
   kind: "generic" | "custom" | "addon_pack";
   name: string;
   definition: TemplateDefinition;
+  min_plan?: "basic" | "pro";
   created_at: string;
 }
 
@@ -27,6 +45,7 @@ export interface Plan {
   monthly_posts: number;
   generic_templates: number;
   custom_templates: number;
+  monthly_carousels?: number;
   instagram_autopost: boolean;
 }
 
@@ -73,6 +92,8 @@ export interface Post {
   image_headline: string | null;
   image_subtext: string | null;
   post_type: string | null;
+  format?: "single" | "carousel";
+  slides?: Slide[] | null;
   scheduled_at: string | null;
   status: PostStatus;
   created_at: string;

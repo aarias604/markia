@@ -6,6 +6,13 @@ export const LAYOUTS: { id: LayoutId; label: string }[] = [
   { id: "esquina", label: "Esquina curva" },
   { id: "dividido", label: "Dividido en dos" },
   { id: "marco", label: "Marco elegante" },
+  { id: "diagonal", label: "Diagonal" },
+  { id: "tarjeta", label: "Tarjeta" },
+  { id: "cita", label: "Cita o frase" },
+  { id: "titular", label: "Titular con barra" },
+  { id: "minimal", label: "Minimalista" },
+  { id: "burbuja", label: "Burbujas" },
+  { id: "oferta", label: "Oferta con sello" },
 ];
 
 export const COLOR_ROLES: { id: ColorRole; label: string }[] = [

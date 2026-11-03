@@ -32,12 +32,12 @@ const PASOS = [
   { n: "1", title: "Crea tu cuenta", text: "Regístrate con tu correo en menos de un minuto." },
   { n: "2", title: "Configura tu marca", text: "Sube tu logo, elige tus colores, tu nicho y tu tono de voz." },
   { n: "3", title: "Genera con IA", text: "Escribe una idea o deja que Markia te proponga temas. Recibe texto, hashtags e imagen." },
-  { n: "4", title: "Programa y publica", text: "Arrastra cada publicación al día que quieras en el calendario y descárgala o publícala." },
+  { n: "4", title: "Descarga y publica", text: "Organízalas en el calendario y descarga cada imagen o carrusel con su descripción sugerida, lista para Instagram." },
 ];
 
 const PLANES = [
-  { name: "Plan Básico", price: "$19", items: ["10 publicaciones con IA al mes", "5 plantillas de diseño", "Calendario de contenido", "Descarga en PNG"] },
-  { name: "Plan PRO", price: "$39", featured: true, items: ["26 publicaciones con IA al mes", "5 plantillas + 5 plantillas propias", "Publicación automática en Instagram", "Todo lo del Plan Básico"] },
+  { name: "Plan Básico", price: "$19", items: ["10 publicaciones con IA al mes", "1 carrusel con IA al mes", "10 plantillas de diseño", "Descripción sugerida y hashtags", "Calendario y descarga en PNG"] },
+  { name: "Plan PRO", price: "$39", featured: true, items: ["26 publicaciones con IA al mes", "3 carruseles con IA al mes", "20 plantillas + 5 plantillas propias", "Publicación automática en Instagram (próximamente)", "Todo lo del Plan Básico"] },
 ];
 
 const FAQ = [
@@ -45,7 +45,8 @@ const FAQ = [
   { q: "¿Hay contrato o cobro automático?", a: `No. Pagas mes a mes cuando quieras renovar. Te avisamos ${REGLAS.avisoDias} días antes del vencimiento y tienes ${REGLAS.graciaDias} días de gracia.` },
   { q: "¿Cómo pago?", a: "Con Yappy Comercial desde tu celular, o con criptomonedas (USDT). Todo en dólares." },
   { q: "¿De quién es el contenido que genero?", a: "Tuyo. Puedes usarlo en tus redes y materiales sin restricciones." },
-  { q: "¿Y si no tengo logo?", a: "Puedes empezar sin logo, o pedir nuestro servicio de Creación de Logo y Paleta de Colores." },
+  { q: "¿Y si no tengo logo?", a: "Puedes empezar sin logo, o usar nuestra Generación de Marca con IA: logo, colores, tipografías y guía en minutos." },
+  { q: "¿Markia publica sola en Instagram?", a: "La publicación automática llega pronto al Plan PRO. Mientras tanto, descargas cada imagen con su descripción sugerida y la subes en segundos." },
   { q: "¿Cómo funciona el programa de referidos?", a: `Compartes tu enlace y ganas el ${REGLAS.referidoPorcentaje}% de cada mensualidad que pague quien se registre con él. Retiras desde US$${REGLAS.retiroMinimo} por banco o cripto.` },
 ];
 
@@ -185,16 +186,16 @@ export default function Home() {
             </span>
             <h2 className="mt-5 text-3xl font-bold sm:text-4xl">¿Aún no tienes logo ni colores? Te los creamos</h2>
             <p className="mt-4 text-[#FAF5EF]/80">
-              Con nuestro servicio de Creación de Logo y Paleta de Colores diseñamos con IA una identidad para tu negocio:
-              un logo en PNG y SVG, una paleta de 4 colores lista para Markia y recomendaciones de tipografía.
+              Cuéntanos de tu negocio y nuestra IA crea tu identidad visual en minutos. Recibes el paquete completo en tu
+              correo, con instrucciones y sugerencias de uso, y puedes aplicarlo a Markia con un clic.
             </p>
             <ul className="mt-6 space-y-2 text-sm">
-              {["Propuesta de logo según tu nicho y estilo", "Paleta de colores primario, secundario, acento y fondo", "Archivos listos para usar en Markia y en tus redes", "Una ronda de ajustes incluida"].map((t) => (
+              {["Logo en 3 versiones: principal, ícono y monocromo (SVG y PNG)", "Paleta de 5 colores con su uso recomendado", "2 tipografías gratuitas de Google Fonts", "Guía de uso: qué hacer, qué evitar e ideas de aplicación", "Un ajuste incluido"].map((t) => (
                 <li key={t} className="flex gap-2"><Check className="h-5 w-5 shrink-0 text-[#D9B382]" /> {t}</li>
               ))}
             </ul>
             <div className="mt-8 flex flex-wrap items-center gap-4">
-              <Link href="/registro" className={btnGold}>Quiero mi marca · $19.99</Link>
+              <Link href="/registro" className={btnGold}>Quiero mi marca · $24.99</Link>
               <span className="text-xs text-[#FAF5EF]/60">Pago único. Disponible en la Tienda de tu cuenta.</span>
             </div>
           </div>

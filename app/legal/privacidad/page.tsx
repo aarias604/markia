@@ -9,7 +9,8 @@ const PROVEEDORES = [
   ["Anthropic", "Inteligencia artificial que redacta los textos (recibe tu nicho, tono e ideas, no tu contraseña ni datos de pago)", "Estados Unidos"],
   ["Banco General · Yappy Comercial", "Procesamiento de pagos con Yappy", "Panamá"],
   ["Lulubit", "Recepción de pagos con criptomonedas", "Panamá"],
-  ["Meta (Instagram)", "Publicación automática, solo si conectas tu cuenta", "Estados Unidos"],
+  ["Resend", "Envío de correos (por ejemplo, tu paquete de marca)", "Estados Unidos"],
+  ["Meta (Instagram)", "Publicación automática, solo si conectas tu cuenta (próximamente)", "Estados Unidos"],
 ];
 
 export default function PrivacidadPage() {

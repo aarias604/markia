@@ -1,4 +1,4 @@
-// POST /api/generar · Genera publicaciones con Claude usando el kit de marca.
+// POST /api/generar · Genera publicaciones o carruseles con Claude usando el kit de marca.
 // Revisa: sesión, cuenta no suspendida, cupo del plan. Descuenta el cupo solo si la IA respondió bien.
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
@@ -15,11 +15,14 @@ interface GeneratedPost {
   hashtags: string[];
   texto_imagen: string;
   subtexto_imagen: string;
+  slides: { titulo: string; texto: string }[];
 }
 
 function fail(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
 }
+
+const str = (v: unknown, max: number) => String(v ?? "").trim().slice(0, max);
 
 function parsePosts(text: string): GeneratedPost[] {
   const start = text.indexOf("{");
@@ -30,21 +33,29 @@ function parsePosts(text: string): GeneratedPost[] {
 
   return parsed.posts
     .map((raw) => {
-      const p = raw as Partial<Record<keyof GeneratedPost, unknown>>;
+      const p = raw as Record<string, unknown>;
       const hashtags = Array.isArray(p.hashtags) ? p.hashtags : [];
+      const slides = Array.isArray(p.slides) ? p.slides : [];
       return {
-        titulo: String(p.titulo ?? "").slice(0, 80),
-        caption: String(p.caption ?? "").slice(0, 2200),
+        titulo: str(p.titulo, 80),
+        caption: str(p.caption, 2200),
         hashtags: hashtags
           .map((h) => String(h).replace(/\s+/g, ""))
           .filter(Boolean)
           .map((h) => (h.startsWith("#") ? h : `#${h}`))
           .slice(0, 12),
-        texto_imagen: String(p.texto_imagen ?? "").slice(0, 90),
-        subtexto_imagen: String(p.subtexto_imagen ?? "").slice(0, 120),
+        texto_imagen: str(p.texto_imagen, 90),
+        subtexto_imagen: str(p.subtexto_imagen, 120),
+        slides: slides
+          .map((s) => {
+            const o = s as Record<string, unknown>;
+            return { titulo: str(o.titulo, 90), texto: str(o.texto, 160) };
+          })
+          .filter((s) => s.titulo)
+          .slice(0, 10),
       };
     })
-    .filter((p) => p.caption && p.texto_imagen);
+    .filter((p) => p.caption && (p.texto_imagen || p.slides.length));
 }
 
 export async function POST(request: Request) {
@@ -59,13 +70,18 @@ export async function POST(request: Request) {
     tipo?: unknown;
     cantidad?: unknown;
     templateId?: unknown;
+    formato?: unknown;
+    laminas?: unknown;
   } | null;
   if (!body) return fail("Solicitud inválida.", 400);
 
+  const isCarousel = body.formato === "carousel";
   const idea = typeof body.idea === "string" ? body.idea.trim().slice(0, 600) : "";
   const tipo = TIPOS_POST.find((t) => t.id === body.tipo) ?? TIPOS_POST[0];
-  const cantidad = Math.min(Math.max(Math.floor(Number(body.cantidad) || 1), 1), MAX_POR_VEZ);
+  const cantidad = isCarousel ? 1 : Math.min(Math.max(Math.floor(Number(body.cantidad) || 1), 1), MAX_POR_VEZ);
+  const laminas = Math.min(Math.max(Math.floor(Number(body.laminas) || 6), 4), 8);
   const templateId = typeof body.templateId === "string" && body.templateId ? body.templateId : null;
+  const admin = createAdminClient();
 
   // 1. Estado de la cuenta y cupo
   const { data: billing } = await supabase.rpc("get_my_billing").maybeSingle();
@@ -73,23 +89,29 @@ export async function POST(request: Request) {
   if (!b) return fail("Necesitas un plan activo para generar publicaciones.", 403);
   if (!b.can_generate) return fail("Tu cuenta está suspendida. Reactívala para seguir generando.", 403);
 
-  const { data: sub } = await supabase
-    .from("subscriptions")
-    .select("posts_used_this_cycle, extra_posts_balance, plans(monthly_posts)")
-    .eq("user_id", user.id)
-    .single();
-  const s = sub as { posts_used_this_cycle: number; extra_posts_balance: number; plans: { monthly_posts: number } | null } | null;
-  const remaining = s ? Math.max((s.plans?.monthly_posts ?? 0) - s.posts_used_this_cycle, 0) + s.extra_posts_balance : 0;
-  if (remaining < cantidad) {
-    return fail(
-      remaining === 0
-        ? "Ya usaste todas las publicaciones de este ciclo."
-        : `Solo te quedan ${remaining} publicaciones este ciclo.`,
-      402
-    );
+  if (isCarousel) {
+    const { data: q } = await admin.rpc("carousel_quota", { p_user_id: user.id }).maybeSingle();
+    const quota = q as { limit_count: number; used_count: number } | null;
+    if (!quota || quota.used_count >= quota.limit_count) {
+      return fail(`Ya usaste tus ${quota?.limit_count ?? 0} carrusel(es) de este ciclo.`, 402);
+    }
+  } else {
+    const { data: sub } = await supabase
+      .from("subscriptions")
+      .select("posts_used_this_cycle, extra_posts_balance, plans(monthly_posts)")
+      .eq("user_id", user.id)
+      .single();
+    const s = sub as { posts_used_this_cycle: number; extra_posts_balance: number; plans: { monthly_posts: number } | null } | null;
+    const remaining = s ? Math.max((s.plans?.monthly_posts ?? 0) - s.posts_used_this_cycle, 0) + s.extra_posts_balance : 0;
+    if (remaining < cantidad) {
+      return fail(
+        remaining === 0 ? "Ya usaste todas las publicaciones de este ciclo." : `Solo te quedan ${remaining} publicaciones este ciclo.`,
+        402
+      );
+    }
   }
 
-  // 2. Marca y plantillas
+  // 2. Marca y plantillas (RLS solo devuelve las plantillas permitidas por el plan)
   const [{ data: kit }, { data: profile }, { data: templates }] = await Promise.all([
     supabase.from("brand_kits").select("niche, voice_tone").eq("user_id", user.id).maybeSingle(),
     supabase.from("profiles").select("business_name").eq("id", user.id).maybeSingle(),
@@ -98,9 +120,10 @@ export async function POST(request: Request) {
   if (!kit) return fail("Primero completa tu kit de marca.", 400);
 
   const tplList = (templates ?? []) as { id: string; kind: string }[];
-  if (templateId && !tplList.some((t) => t.id === templateId)) return fail("La plantilla elegida no existe.", 400);
+  if (templateId && !tplList.some((t) => t.id === templateId)) return fail("Esa plantilla no está disponible en tu plan.", 400);
   const generic = tplList.filter((t) => t.kind === "generic");
-  const pickTemplate = (i: number) => templateId ?? (generic.length ? generic[i % generic.length].id : null);
+  const offset = Math.floor(Math.random() * Math.max(generic.length, 1));
+  const pickTemplate = (i: number) => templateId ?? (generic.length ? generic[(offset + i) % generic.length].id : null);
 
   // 3. Claude
   const negocio = profile?.business_name || "la marca";
@@ -113,42 +136,54 @@ export async function POST(request: Request) {
     "Responde SOLO con JSON válido, sin texto antes ni después.",
   ].join("\n");
 
-  const prompt = [
-    `Crea ${cantidad} publicación(es) distinta(s) entre sí.`,
-    `Tipo de contenido: ${tipo.label}.`,
-    idea ? `Idea o contexto del usuario: ${idea}` : "No hay idea específica: propone temas útiles y atractivos para este negocio.",
-    "",
-    "Formato exacto:",
-    '{"posts":[{"titulo":"nombre interno de 2 a 6 palabras","caption":"texto del post de 60 a 150 palabras con una llamada a la acción al final","hashtags":["#ejemplo"],"texto_imagen":"frase gancho para la imagen, máximo 7 palabras","subtexto_imagen":"apoyo para la imagen, máximo 12 palabras"}]}',
-    "Incluye de 5 a 10 hashtags por publicación, mezclando generales y locales de Panamá cuando tenga sentido.",
-  ].join("\n");
+  const prompt = isCarousel
+    ? [
+        `Crea 1 carrusel de Instagram de exactamente ${laminas} láminas.`,
+        `Tipo de contenido: ${tipo.label}.`,
+        idea ? `Tema o contexto del usuario: ${idea}` : "No hay tema específico: elige uno útil y atractivo para este negocio.",
+        "La lámina 1 es la portada con un gancho fuerte. Las del medio desarrollan una idea cada una. La última cierra con una llamada a la acción.",
+        "",
+        "Formato exacto:",
+        '{"posts":[{"titulo":"nombre interno de 2 a 6 palabras","caption":"descripción sugerida para publicar, de 60 a 150 palabras, que invite a deslizar y termine con una llamada a la acción","hashtags":["#ejemplo"],"slides":[{"titulo":"máximo 7 palabras","texto":"máximo 20 palabras"}]}]}',
+        "Incluye de 5 a 10 hashtags.",
+      ].join("\n")
+    : [
+        `Crea ${cantidad} publicación(es) distinta(s) entre sí.`,
+        `Tipo de contenido: ${tipo.label}.`,
+        idea ? `Idea o contexto del usuario: ${idea}` : "No hay idea específica: propone temas útiles y atractivos para este negocio.",
+        "",
+        "Formato exacto:",
+        '{"posts":[{"titulo":"nombre interno de 2 a 6 palabras","caption":"descripción sugerida para publicar, de 60 a 150 palabras, con una llamada a la acción al final","hashtags":["#ejemplo"],"texto_imagen":"frase gancho para la imagen, máximo 7 palabras","subtexto_imagen":"apoyo para la imagen, máximo 12 palabras"}]}',
+        "Incluye de 5 a 10 hashtags por publicación, mezclando generales y locales de Panamá cuando tenga sentido.",
+      ].join("\n");
 
   let generated: GeneratedPost[];
   try {
     const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
     const message = await anthropic.messages.create({
       model: MODEL,
-      max_tokens: 1200 * cantidad,
+      max_tokens: isCarousel ? 3000 : 1200 * cantidad,
       system,
       messages: [{ role: "user", content: prompt }],
     });
     const text = message.content.map((block) => (block.type === "text" ? block.text : "")).join("");
     generated = parsePosts(text).slice(0, cantidad);
-    if (generated.length === 0) throw new Error("La IA no devolvió publicaciones.");
+    if (generated.length === 0 || (isCarousel && generated[0].slides.length < 3)) {
+      throw new Error("La IA no devolvió el contenido completo.");
+    }
   } catch (e) {
     console.error("[generar] Claude:", e);
     return fail("La IA no pudo responder ahora. Inténtalo de nuevo en un momento (no se descontó tu cupo).", 502);
   }
 
-  // 4. Descontar cupo (de forma atómica en la base de datos)
-  const admin = createAdminClient();
-  const { data: quota, error: quotaErr } = await admin
-    .rpc("consume_post_quota", { p_user_id: user.id, p_count: generated.length })
-    .single();
+  // 4. Descontar cupo (atómico en la base de datos)
+  const { data: quota, error: quotaErr } = isCarousel
+    ? await admin.rpc("consume_carousel_quota", { p_user_id: user.id }).single()
+    : await admin.rpc("consume_post_quota", { p_user_id: user.id, p_count: generated.length }).single();
   const q = quota as { ok: boolean; message: string } | null;
   if (quotaErr || !q?.ok) {
     if (quotaErr) console.error("[generar] cupo:", quotaErr);
-    return fail(q?.message ?? "No se pudo descontar tu cupo. ¿Corriste la migración de la Fase 6?", 402);
+    return fail(q?.message ?? "No se pudo descontar tu cupo. ¿Corriste las migraciones en Supabase?", 402);
   }
 
   // 5. Guardar como borradores
@@ -158,15 +193,17 @@ export async function POST(request: Request) {
     title: p.titulo,
     caption: p.caption,
     hashtags: p.hashtags,
-    image_headline: p.texto_imagen,
-    image_subtext: p.subtexto_imagen,
+    image_headline: isCarousel ? p.slides[0]?.titulo ?? p.titulo : p.texto_imagen,
+    image_subtext: isCarousel ? p.slides[0]?.texto ?? "" : p.subtexto_imagen,
     post_type: tipo.id,
+    format: isCarousel ? "carousel" : "single",
+    slides: isCarousel ? p.slides : null,
     status: "draft",
   }));
   const { data: inserted, error: insErr } = await supabase.from("posts").insert(rows).select("*");
   if (insErr) {
     console.error("[generar] insert:", insErr);
-    return fail(`Se generaron, pero no se pudieron guardar: ${insErr.message}`, 500);
+    return fail(`Se generó, pero no se pudo guardar: ${insErr.message}`, 500);
   }
 
   return NextResponse.json({ posts: inserted });
