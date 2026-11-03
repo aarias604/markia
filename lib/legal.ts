@@ -15,8 +15,8 @@ export const LEGAL = {
   telefono: "[+507 0000-0000]",
   sitio: "https://markiapa.com",
   /** Cámbiala cada vez que modifiques un documento legal. */
-  version: "2026-11-02",
-  actualizado: "2 de noviembre de 2026",
+  version: "2026-11-03",
+  actualizado: "3 de noviembre de 2026",
 } as const;
 
 // Reglas del negocio que aparecen en los documentos (mantener igual que en la base de datos).
