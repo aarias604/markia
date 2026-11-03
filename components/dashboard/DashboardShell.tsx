@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import {
   CalendarDays,
@@ -62,14 +62,16 @@ function NavLinks({ onNavigate, isAdmin }: { onNavigate?: () => void; isAdmin: b
 }
 
 export function DashboardShell({ children }: { children: ReactNode }) {
-  const router = useRouter();
   const { billing, businessName, logoDataUrl, email, subscription, refresh, profile } = useDashboard();
   const [open, setOpen] = useState(false);
 
   async function logout() {
-    await createClient().auth.signOut();
-    router.replace("/login");
-    router.refresh();
+    try {
+      await createClient().auth.signOut();
+    } finally {
+      // Recarga completa para limpiar todo el estado de la sesión anterior.
+      window.location.assign("/login");
+    }
   }
 
   const sidebar = (

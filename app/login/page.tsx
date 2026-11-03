@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import { Loader2 } from "lucide-react";
 import { AuthShell, traducirError } from "@/components/auth/AuthShell";
@@ -9,7 +8,6 @@ import { createClient } from "@/lib/supabase/client";
 import { btnPrimary, errorCls, inputCls, labelCls } from "@/lib/ui";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -26,20 +24,31 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    const supabase = createClient();
-    const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
-    if (error || !data.user) {
-      setError(traducirError(error?.message ?? "No se pudo iniciar sesión."));
+
+    // Si algo tarda más de 20 segundos, liberamos el botón y mostramos un aviso.
+    const timeout = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("La conexión tardó demasiado. Revisa tu internet e inténtalo de nuevo.")), 20000)
+    );
+
+    try {
+      const supabase = createClient();
+      const { data, error } = await Promise.race([
+        supabase.auth.signInWithPassword({ email: email.trim(), password }),
+        timeout,
+      ]);
+      if (error || !data.user) throw new Error(traducirError(error?.message ?? "No se pudo iniciar sesión."));
+
+      const { data: profile } = await Promise.race([
+        supabase.from("profiles").select("onboarding_completed").eq("id", data.user.id).maybeSingle(),
+        timeout,
+      ]);
+
+      // Recarga completa: así el servidor ve la sesión nueva sin depender de la caché del navegador.
+      window.location.assign(profile?.onboarding_completed ? "/dashboard" : "/onboarding");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo iniciar sesión.");
       setLoading(false);
-      return;
     }
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("onboarding_completed")
-      .eq("id", data.user.id)
-      .maybeSingle();
-    router.replace(profile?.onboarding_completed ? "/dashboard" : "/onboarding");
-    router.refresh();
   }
 
   return (
