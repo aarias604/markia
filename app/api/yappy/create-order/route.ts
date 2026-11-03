@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     addonId?: string;
     phone?: string;
   } | null;
-  if (!body || (body.kind !== "subscription" && body.kind !== "addon")) return fail("Solicitud inválida.", 400);
+  if (!body || !["subscription", "addon", "upgrade"].includes(body.kind ?? "")) return fail("Solicitud inválida.", 400);
 
   const phone = normalizePhone(body.phone);
   if (!phone) return fail("Escribe tu número de celular de Yappy: 8 dígitos que empiezan con 6.", 400);
@@ -39,7 +39,9 @@ export async function POST(request: Request) {
   const { data, error } =
     body.kind === "addon"
       ? await admin.rpc("create_addon_payment", { p_user_id: user.id, p_addon_id: body.addonId ?? "" })
-      : await admin.rpc("create_subscription_payment", { p_user_id: user.id, p_plan_id: body.planId ?? null });
+      : body.kind === "upgrade"
+        ? await admin.rpc("create_upgrade_payment", { p_user_id: user.id })
+        : await admin.rpc("create_subscription_payment", { p_user_id: user.id, p_plan_id: body.planId ?? null });
 
   if (error) return fail(error.message, 400);
   const payment = (Array.isArray(data) ? data[0] : data) as PaymentRow | null;

@@ -43,6 +43,16 @@ export default function DashboardHome() {
         </div>
       )}
 
+      {subscription?.plan_id === "basic" && ["active", "expiring_soon"].includes(billing?.status ?? "") && (
+        <div className="flex flex-col gap-3 rounded-2xl border-2 border-[#D9B382] bg-[#FDFBF7] p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="font-semibold">Pásate a PRO con 35% de descuento en tu primer mes</p>
+            <p className="text-sm text-[#4A154B]/70">26 publicaciones, 3 carruseles y 20 plantillas al mes.</p>
+          </div>
+          <Link href="/dashboard/planes" className={btnGold}>Ver oferta</Link>
+        </div>
+      )}
+
       <div className="grid gap-4 sm:grid-cols-3">
         <div className={cardCls}>
           <CreditCard className="h-6 w-6 text-[#8C338A]" />

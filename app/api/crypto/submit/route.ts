@@ -1,5 +1,7 @@
 // POST /api/crypto/submit · El cliente registra el comprobante (hash) de su envío.
 import { NextResponse } from "next/server";
+import { notifyAdminCrypto } from "@/lib/notifications";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 export async function POST(request: Request) {
@@ -21,5 +23,6 @@ export async function POST(request: Request) {
   });
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
+  await notifyAdminCrypto(createAdminClient(), body.paymentId);
   return NextResponse.json({ ok: true });
 }

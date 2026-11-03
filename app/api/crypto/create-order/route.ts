@@ -19,13 +19,15 @@ export async function POST(request: Request) {
   if (wallets.length === 0) return fail("El pago con cripto aún no está configurado.", 503);
 
   const body = (await request.json().catch(() => null)) as { kind?: string; planId?: string; addonId?: string } | null;
-  if (!body || (body.kind !== "subscription" && body.kind !== "addon")) return fail("Solicitud inválida.", 400);
+  if (!body || !["subscription", "addon", "upgrade"].includes(body.kind ?? "")) return fail("Solicitud inválida.", 400);
 
   const admin = createAdminClient();
   const { data, error } =
     body.kind === "addon"
       ? await admin.rpc("create_addon_payment", { p_user_id: user.id, p_addon_id: body.addonId ?? "" })
-      : await admin.rpc("create_subscription_payment", { p_user_id: user.id, p_plan_id: body.planId ?? null });
+      : body.kind === "upgrade"
+        ? await admin.rpc("create_upgrade_payment", { p_user_id: user.id })
+        : await admin.rpc("create_subscription_payment", { p_user_id: user.id, p_plan_id: body.planId ?? null });
   if (error) return fail(error.message, 400);
 
   const payment = (Array.isArray(data) ? data[0] : data) as { id: string; amount_cents: number } | null;

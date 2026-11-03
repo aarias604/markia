@@ -21,7 +21,10 @@ const CDN =
     ? "https://bt-cdn.yappy.cloud/v1/cdn/web-component-btn-yappy.js"
     : "https://bt-cdn-uat.yappycloud.com/v1/cdn/web-component-btn-yappy.js";
 
-export type CheckoutRequest = { kind: "subscription"; planId?: string } | { kind: "addon"; addonId: string };
+export type CheckoutRequest =
+  | { kind: "subscription"; planId?: string }
+  | { kind: "addon"; addonId: string }
+  | { kind: "upgrade" };
 
 type YappyButton = HTMLElement & {
   eventPayment?: (p: { transactionId: string; documentName: string; token: string }) => void;

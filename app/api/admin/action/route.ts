@@ -1,6 +1,7 @@
 // POST /api/admin/action · Aprobar/rechazar pagos cripto y pagar/rechazar retiros.
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin";
+import { notifyPaymentConfirmed } from "@/lib/notifications";
 
 type Action = "approve_crypto" | "reject_crypto" | "pay_payout" | "reject_payout";
 
@@ -49,6 +50,8 @@ export async function POST(request: Request) {
   }
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+
+  if (body.action === "approve_crypto") await notifyPaymentConfirmed(admin, body.id);
 
   const needsReview = !!(result && typeof result === "object" && (result as { needs_review?: boolean }).needs_review);
   return NextResponse.json({ ok: true, needsReview });

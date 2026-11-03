@@ -43,6 +43,11 @@ export default function TerminosPage() {
         </li>
         <li>Los precios están en dólares de los Estados Unidos (USD). [Confirmar con tu contador si incluyen ITBMS.]</li>
         <li>Puedes pagar con Yappy Comercial o con criptomonedas (USDT) según las instrucciones del sitio. Los pagos con cripto se confirman manualmente en un plazo de hasta 24 horas.</li>
+        <li>
+          <strong>Cambio a PRO:</strong> si tienes el Plan Básico y estás al día, puedes cambiarte al Plan PRO pagando el primer
+          mes PRO con 35% de descuento. El cambio aplica al confirmarse el pago y se suman 30 días a tu fecha de vencimiento.
+          Desde la siguiente cuota pagas el precio normal del Plan PRO.
+        </li>
         <li>Cada pago cubre un ciclo de 30 días. Las publicaciones no usadas no se acumulan al siguiente ciclo, salvo las compradas con el Boost.</li>
         <li>Podemos cambiar los precios con al menos 15 días de aviso por correo. El cambio aplica desde tu siguiente renovación.</li>
       </ul>

@@ -1,6 +1,7 @@
 // GET /api/yappy/ipn · Yappy avisa aquí el resultado de cada pago.
 // Valida la firma, y si el pago se ejecutó (E) lo aplica: extiende la suscripción o entrega el add-on.
-import { NextResponse, type NextRequest } from "next/server";
+import { after, NextResponse, type NextRequest } from "next/server";
+import { notifyPaymentConfirmed } from "@/lib/notifications";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { verifyIpnHash } from "@/lib/yappy";
 
@@ -40,6 +41,8 @@ export async function GET(request: NextRequest) {
       console.error("[yappy] apply_payment:", error);
       return NextResponse.json({ success: false }, { status: 500 });
     }
+    // Correo de confirmación sin hacer esperar a Yappy (debe responder en menos de 5 segundos).
+    after(() => notifyPaymentConfirmed(admin, payment.id));
   } else if (payment.status === "pending") {
     await admin
       .from("payments")
