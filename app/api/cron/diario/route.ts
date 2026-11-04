@@ -12,6 +12,7 @@ import {
   suspendedEmail,
   userEmail,
 } from "@/lib/notifications";
+import { igRefresh } from "@/lib/instagram";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 interface SubRow {
@@ -93,6 +94,37 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  // Renovar conexiones de Instagram que vencen en menos de 20 días (duran 60).
+  let igRefreshed = 0;
+  const soon = new Date(Date.now() + 20 * 86400000).toISOString();
+  const dayAgo = new Date(Date.now() - 86400000).toISOString();
+  const { data: igs } = await admin
+    .from("instagram_accounts")
+    .select("user_id, access_token, api_mode")
+    .lt("token_expires_at", soon)
+    .gt("token_expires_at", new Date().toISOString())
+    .lt("refreshed_at", dayAgo);
+  for (const ig of igs ?? []) {
+    try {
+      const { token, expiresAt } = await igRefresh(ig.api_mode, ig.access_token);
+      await admin
+        .from("instagram_accounts")
+        .update({
+          access_token: token,
+          token_expires_at: expiresAt,
+          refreshed_at: new Date().toISOString(),
+          last_error: null,
+        })
+        .eq("user_id", ig.user_id);
+      igRefreshed++;
+    } catch (err) {
+      await admin
+        .from("instagram_accounts")
+        .update({ last_error: err instanceof Error ? err.message.slice(0, 300) : "No se pudo renovar" })
+        .eq("user_id", ig.user_id);
+    }
+  }
+
   // Resumen diario para el administrador (solo si hay pendientes).
   const [crypto, payouts, brands] = await Promise.all([
     admin.from("payments").select("id", { count: "exact", head: true })
@@ -107,5 +139,5 @@ export async function GET(request: NextRequest) {
     if (sent) summary.admin++;
   }
 
-  return NextResponse.json({ ok: true, ...summary });
+  return NextResponse.json({ ok: true, ...summary, igRefreshed });
 }

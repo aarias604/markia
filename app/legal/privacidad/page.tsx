@@ -10,7 +10,7 @@ const PROVEEDORES = [
   ["Banco General · Yappy Comercial", "Procesamiento de pagos con Yappy", "Panamá"],
   ["Lulubit", "Recepción de pagos con criptomonedas", "Panamá"],
   ["Resend", "Envío de correos (por ejemplo, tu paquete de marca)", "Estados Unidos"],
-  ["Meta (Instagram)", "Publicación automática, solo si conectas tu cuenta (próximamente)", "Estados Unidos"],
+  ["Meta (Instagram)", "Publicación automática en tu cuenta, solo si la conectas. Guardamos tu usuario y un permiso de acceso que puedes revocar cuando quieras", "Estados Unidos"],
 ];
 
 export default function PrivacidadPage() {
@@ -29,7 +29,8 @@ export default function PrivacidadPage() {
       <ul>
         <li><strong>Cuenta:</strong> nombre, correo electrónico y contraseña (guardada cifrada; nosotros no podemos verla).</li>
         <li><strong>Marca:</strong> nombre del negocio, logo, colores, nicho y tono de voz.</li>
-        <li><strong>Contenido:</strong> ideas que escribes, publicaciones generadas, fechas programadas.</li>
+        <li><strong>Contenido:</strong> ideas que escribes, publicaciones generadas, imágenes que subes, fechas programadas.</li>
+        <li><strong>Instagram (si lo conectas):</strong> tu usuario, el identificador de tu cuenta profesional, un permiso de acceso para publicar lo que programes y los enlaces de lo publicado. Puedes desconectarlo en cualquier momento; ver <a href="/legal/eliminacion-datos">Eliminación de datos</a>.</li>
         <li><strong>Pagos:</strong> número de celular de Yappy, montos, fechas, números de orden y confirmación. Para pagos con cripto: red y comprobante de la transacción. No guardamos datos de tarjetas.</li>
         <li><strong>Programa de referidos:</strong> quién te refirió, tus comisiones y, si pides un retiro, los datos bancarios o la dirección de billetera que nos des.</li>
         <li><strong>Técnicos:</strong> la información mínima que requieren las cookies esenciales de sesión y los registros de seguridad del servidor.</li>

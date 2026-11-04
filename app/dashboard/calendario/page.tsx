@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState, type DragEvent } from "react";
-import { ChevronLeft, ChevronRight, Sparkles, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, CircleDashed, Sparkles, Upload, X, Zap } from "lucide-react";
 import { PostCard } from "@/components/posts/PostCard";
 import { InlineLoader } from "@/components/ui/Loader";
 import { STATUS_INFO, dayKey } from "@/lib/posts";
 import { createClient } from "@/lib/supabase/client";
 import type { Post, PostStatus } from "@/lib/types";
-import { btnGold, cardCls, errorCls } from "@/lib/ui";
+import { btnGold, btnSecondary, cardCls, errorCls } from "@/lib/ui";
 
 const WEEKDAYS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 const DOT: Record<PostStatus, string> = {
@@ -105,6 +105,8 @@ export default function CalendarioPage() {
       title={p.title ?? ""}
     >
       <span className={`h-2 w-2 shrink-0 rounded-full ${DOT[p.status]}`} />
+      {p.placement === "story" && <CircleDashed className="h-3 w-3 shrink-0 text-[#8C338A]" aria-label="Historia" />}
+      {p.auto_publish && p.status === "scheduled" && <Zap className="h-3 w-3 shrink-0 text-amber-600" aria-label="Automática" />}
       {showTime && p.scheduled_at && <span className="shrink-0 font-semibold">{timeLabel(p.scheduled_at)}</span>}
       <span className="truncate">{p.title || p.image_headline || "Publicación"}</span>
     </button>
@@ -117,9 +119,14 @@ export default function CalendarioPage() {
           <h1 className="text-2xl font-bold">Calendario</h1>
           <p className="mt-1 text-sm text-[#4A154B]/70">Arrastra cada publicación al día que quieras. Toca una para editarla.</p>
         </div>
-        <Link href="/dashboard/generador" className={btnGold}>
-          <Sparkles className="h-4 w-4" /> Generar más
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/dashboard/subir" className={btnSecondary}>
+            <Upload className="h-4 w-4" /> Subir propia
+          </Link>
+          <Link href="/dashboard/generador" className={btnGold}>
+            <Sparkles className="h-4 w-4" /> Generar más
+          </Link>
+        </div>
       </div>
 
       {error && <p className={errorCls}>{error}</p>}
@@ -172,7 +179,9 @@ export default function CalendarioPage() {
           )}
 
           <div className="mt-4 flex flex-wrap gap-4 text-xs text-[#4A154B]/70">
-            {(["draft", "scheduled", "published"] as PostStatus[]).map((s) => (
+            <span className="inline-flex items-center gap-1.5"><CircleDashed className="h-3 w-3 text-[#8C338A]" /> Historia</span>
+            <span className="inline-flex items-center gap-1.5"><Zap className="h-3 w-3 text-amber-600" /> Automática</span>
+            {(["draft", "scheduled", "published", "failed"] as PostStatus[]).map((s) => (
               <span key={s} className="inline-flex items-center gap-1.5">
                 <span className={`h-2 w-2 rounded-full ${DOT[s]}`} /> {STATUS_INFO[s].label}
               </span>

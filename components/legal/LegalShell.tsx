@@ -9,6 +9,7 @@ export const LEGAL_PAGES = [
   { href: "/legal/reembolsos", label: "Pagos, cancelación y reembolsos" },
   { href: "/legal/referidos", label: "Términos del Programa de Referidos" },
   { href: "/legal/cookies", label: "Política de Cookies" },
+  { href: "/legal/eliminacion-datos", label: "Eliminación de datos" },
 ];
 
 export function LegalShell({ title, children }: { title: string; children: ReactNode }) {

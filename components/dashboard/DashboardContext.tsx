@@ -22,12 +22,17 @@ interface DashboardData {
   kit: BrandKit | null;
   logoDataUrl: string | null;
   templates: Template[];
+  instagram: { username: string | null; token_expires_at: string; last_error: string | null } | null;
 }
 
 interface DashboardCtx extends DashboardData {
   monthlyPosts: number;
   remainingPosts: number;
   canGenerate: boolean;
+  /** El plan incluye publicación automática en Instagram (PRO). */
+  planHasAutopost: boolean;
+  /** Plan con Instagram + cuenta al día + Instagram conectado. */
+  canAutopost: boolean;
   businessName: string;
   refresh: () => Promise<void>;
 }
@@ -47,12 +52,13 @@ async function loadData(): Promise<DashboardData | null> {
   } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const [profileRes, subRes, billingRes, kitRes, tplRes] = await Promise.all([
+  const [profileRes, subRes, billingRes, kitRes, tplRes, igRes] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
     supabase.from("subscriptions").select("*, plans(*)").eq("user_id", user.id).maybeSingle(),
     supabase.rpc("get_my_billing").maybeSingle(),
     supabase.from("brand_kits").select("*").eq("user_id", user.id).maybeSingle(),
     supabase.from("templates").select("*").order("kind").order("name"),
+    supabase.rpc("get_my_instagram").maybeSingle(),
   ]);
 
   const firstError = [profileRes, subRes, kitRes, tplRes].find((r) => r.error)?.error;
@@ -79,6 +85,7 @@ async function loadData(): Promise<DashboardData | null> {
     kit,
     logoDataUrl,
     templates,
+    instagram: (igRes.data as DashboardData["instagram"]) ?? null,
   };
 }
 
@@ -135,6 +142,8 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     monthlyPosts,
     remainingPosts: data.subscription ? Math.max(monthlyPosts - used, 0) + extra : 0,
     canGenerate: data.billing?.can_generate ?? false,
+    planHasAutopost: !!plan?.instagram_autopost,
+    canAutopost: !!plan?.instagram_autopost && (data.billing?.can_generate ?? false) && !!data.instagram,
     businessName: data.profile?.business_name || "Mi marca",
     refresh,
   };

@@ -14,7 +14,9 @@ import {
   Gift,
   ShieldCheck,
   ShoppingBag,
+  Send,
   Sparkles,
+  Upload,
   Wand2,
   X,
 } from "lucide-react";
@@ -27,8 +29,10 @@ import { createClient } from "@/lib/supabase/client";
 const NAV = [
   { href: "/dashboard", label: "Inicio", icon: LayoutDashboard },
   { href: "/dashboard/generador", label: "Generador IA", icon: Sparkles },
+  { href: "/dashboard/subir", label: "Subir publicación", icon: Upload },
   { href: "/dashboard/calendario", label: "Calendario", icon: CalendarDays },
   { href: "/dashboard/plantillas", label: "Plantillas", icon: LayoutTemplate },
+  { href: "/dashboard/instagram", label: "Instagram", icon: Send },
   { href: "/dashboard/marca", label: "Kit de marca", icon: Palette },
   { href: "/dashboard/marca-ia", label: "Marca con IA", icon: Wand2 },
   { href: "/dashboard/planes", label: "Planes", icon: CreditCard },

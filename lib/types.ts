@@ -94,6 +94,13 @@ export interface Post {
   post_type: string | null;
   format?: "single" | "carousel";
   slides?: Slide[] | null;
+  placement?: "feed" | "story";
+  source?: "ai" | "upload";
+  media_paths?: string[] | null;
+  auto_publish?: boolean;
+  published_at?: string | null;
+  ig_permalink?: string | null;
+  error_message?: string | null;
   scheduled_at: string | null;
   status: PostStatus;
   created_at: string;
