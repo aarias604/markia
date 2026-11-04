@@ -180,7 +180,7 @@ export default function SubirPage() {
             <p className="text-sm"><Link href="/dashboard/instagram" className="font-semibold text-[#6B21A8] underline">Conecta tu Instagram</Link> para publicar automáticamente.</p>
           )
         ) : (
-          <p className="text-xs text-[#4A154B]/60">La publicación automática en Instagram está incluida en el Plan PRO. Puedes programarla igual y recibirás la fecha en tu calendario.</p>
+          <p className="text-xs text-[#4A154B]/60">📧 Si eliges fecha y hora, te enviaremos un correo de recordatorio en ese momento para que la publiques en Instagram.</p>
         )}
 
         {error && <p className={errorCls}>{error}</p>}

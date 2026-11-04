@@ -2,7 +2,7 @@
 // Publica en Instagram las publicaciones programadas con "publicar automáticamente".
 import { NextResponse, type NextRequest } from "next/server";
 import { igPublish } from "@/lib/instagram";
-import { layout, sendOnce, siteUrl, userEmail } from "@/lib/notifications";
+import { layout, publishReminderEmail, sendOnce, siteUrl, userEmail, type ReminderPost } from "@/lib/notifications";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const MAX_POR_VUELTA = 5;
@@ -117,5 +117,40 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  return NextResponse.json({ ok: true, processed: results.length, results });
+  // Recordatorios para quienes publican manualmente (clientes): a la hora programada.
+  let reminders = 0;
+  const since = new Date(Date.now() - 6 * 3600 * 1000).toISOString();
+  const { data: manual } = await admin
+    .from("posts")
+    .select("id, user_id, title, caption, hashtags, placement, scheduled_at, source, media_paths")
+    .eq("status", "scheduled")
+    .eq("auto_publish", false)
+    .lte("scheduled_at", new Date().toISOString())
+    .gte("scheduled_at", since)
+    .limit(50);
+
+  for (const p of (manual ?? []) as (ReminderPost & { user_id: string; source: string | null; media_paths: string[] | null })[]) {
+    try {
+      const { data: already } = await admin
+        .from("email_log").select("id").eq("user_id", p.user_id).eq("kind", "publish_reminder").eq("ref", p.id).maybeSingle();
+      if (already) continue;
+      const [to, { data: profile }] = await Promise.all([
+        userEmail(admin, p.user_id),
+        admin.from("profiles").select("full_name").eq("id", p.user_id).maybeSingle(),
+      ]);
+      if (!to) continue;
+      let links: string[] = [];
+      if (p.media_paths?.length) {
+        const { data: signed } = await admin.storage.from("post-media").createSignedUrls(p.media_paths, 86400);
+        links = (signed ?? []).map((x) => x.signedUrl).filter(Boolean) as string[];
+      }
+      const name = (profile?.full_name ?? "").split(" ")[0] || "Hola";
+      const sent = await sendOnce(admin, { userId: p.user_id, kind: "publish_reminder", ref: p.id, to, ...publishReminderEmail(name, p, links) });
+      if (sent) reminders++;
+    } catch (err) {
+      console.error("[cron] recordatorio", p.id, err);
+    }
+  }
+
+  return NextResponse.json({ ok: true, processed: results.length, results, reminders });
 }

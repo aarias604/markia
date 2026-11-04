@@ -1,16 +1,18 @@
 // GET /api/cron/diario · Lo ejecuta Vercel Cron cada día (ver vercel.json).
 // Envía avisos de vencimiento, gracia y suspensión, y el resumen de pendientes al administrador.
 import { NextResponse, type NextRequest } from "next/server";
-import { computeSubscriptionState, type SubscriptionStatus } from "@/lib/billing/subscription-state";
+import { computeSubscriptionState, panamaToday, type SubscriptionStatus } from "@/lib/billing/subscription-state";
 import {
   adminDigestEmail,
   adminEmail,
+  dailyAgendaEmail,
   expiringEmail,
   graceEmail,
   graceReminderEmail,
   sendOnce,
   suspendedEmail,
   userEmail,
+  type ReminderPost,
 } from "@/lib/notifications";
 import { igRefresh } from "@/lib/instagram";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -94,6 +96,37 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  // Agenda del día: a cada cliente, lo que le toca publicar hoy (hora de Panamá).
+  let agendas = 0;
+  const today = panamaToday();
+  const dayStart = new Date(`${today}T00:00:00-05:00`).toISOString();
+  const dayEnd = new Date(new Date(`${today}T00:00:00-05:00`).getTime() + 86400000).toISOString();
+  const { data: todayPosts } = await admin
+    .from("posts")
+    .select("id, user_id, title, caption, hashtags, placement, scheduled_at")
+    .eq("status", "scheduled")
+    .eq("auto_publish", false)
+    .gte("scheduled_at", dayStart)
+    .lt("scheduled_at", dayEnd)
+    .order("scheduled_at", { ascending: true });
+  const byUser = new Map<string, ReminderPost[]>();
+  for (const p of (todayPosts ?? []) as (ReminderPost & { user_id: string })[]) {
+    byUser.set(p.user_id, [...(byUser.get(p.user_id) ?? []), p]);
+  }
+  for (const [uid, list] of byUser) {
+    try {
+      const [to, { data: profile }] = await Promise.all([
+        userEmail(admin, uid),
+        admin.from("profiles").select("full_name").eq("id", uid).maybeSingle(),
+      ]);
+      if (!to) continue;
+      const name = (profile?.full_name ?? "").split(" ")[0] || "Hola";
+      if (await sendOnce(admin, { userId: uid, kind: "daily_agenda", ref: today, to, ...dailyAgendaEmail(name, list) })) agendas++;
+    } catch (err) {
+      console.error("[cron] agenda", uid, err);
+    }
+  }
+
   // Renovar conexiones de Instagram que vencen en menos de 20 días (duran 60).
   let igRefreshed = 0;
   const soon = new Date(Date.now() + 20 * 86400000).toISOString();
@@ -139,5 +172,5 @@ export async function GET(request: NextRequest) {
     if (sent) summary.admin++;
   }
 
-  return NextResponse.json({ ok: true, ...summary, igRefreshed });
+  return NextResponse.json({ ok: true, ...summary, igRefreshed, agendas });
 }

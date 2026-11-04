@@ -7,7 +7,7 @@ import { useDashboard } from "@/components/dashboard/DashboardContext";
 import { btnGold, btnSecondary, cardCls, errorCls, successCls } from "@/lib/ui";
 
 const ERRORS: Record<string, string> = {
-  plan: "La publicación automática está incluida en el Plan PRO (y tu cuenta debe estar al día).",
+  plan: "La publicación automática está en pruebas: por ahora solo los administradores pueden conectarla.",
   config: "La conexión con Instagram aún no está configurada en Markia. Escríbenos a hola@markiapa.com.",
   cancelado: "Cancelaste la autorización en Instagram.",
   estado: "La autorización venció o no es válida. Inténtalo de nuevo.",
@@ -48,8 +48,8 @@ export default function InstagramPage() {
 
       {!planHasAutopost ? (
         <div className={`${cardCls} flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between`}>
-          <p className="flex items-center gap-2"><Lock className="h-5 w-5 text-[#8C338A]" /> La publicación automática está incluida en el <strong>Plan PRO</strong>.</p>
-          <Link href="/dashboard/planes" className={btnGold}>Ver Plan PRO</Link>
+          <p className="flex items-center gap-2"><Lock className="h-5 w-5 text-[#8C338A]" /> La publicación automática está en pruebas y pronto estará disponible.</p>
+          <Link href="/dashboard/calendario" className={btnGold}>Ir al calendario</Link>
         </div>
       ) : instagram ? (
         <div className={`${cardCls} space-y-3`}>

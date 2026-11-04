@@ -29,9 +29,9 @@ interface DashboardCtx extends DashboardData {
   monthlyPosts: number;
   remainingPosts: number;
   canGenerate: boolean;
-  /** El plan incluye publicación automática en Instagram (PRO). */
+  /** Publicación automática habilitada (por ahora solo administradores, en pruebas). */
   planHasAutopost: boolean;
-  /** Plan con Instagram + cuenta al día + Instagram conectado. */
+  /** Administrador + cuenta al día + Instagram conectado. */
   canAutopost: boolean;
   businessName: string;
   refresh: () => Promise<void>;
@@ -142,8 +142,8 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     monthlyPosts,
     remainingPosts: data.subscription ? Math.max(monthlyPosts - used, 0) + extra : 0,
     canGenerate: data.billing?.can_generate ?? false,
-    planHasAutopost: !!plan?.instagram_autopost,
-    canAutopost: !!plan?.instagram_autopost && (data.billing?.can_generate ?? false) && !!data.instagram,
+    planHasAutopost: !!data.profile?.is_admin,
+    canAutopost: !!data.profile?.is_admin && !!data.instagram,
     businessName: data.profile?.business_name || "Mi marca",
     refresh,
   };

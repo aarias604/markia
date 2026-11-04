@@ -188,6 +188,73 @@ export async function notifyPaymentConfirmed(admin: SupabaseClient, paymentId: s
 }
 
 // ---------------------------------------------------------------------
+// Recordatorios de publicación (clientes publican manualmente)
+// ---------------------------------------------------------------------
+
+export interface ReminderPost {
+  id: string;
+  title: string | null;
+  caption: string | null;
+  hashtags: string[] | null;
+  placement: "feed" | "story" | null;
+  scheduled_at: string;
+}
+
+const hora = (iso: string) =>
+  new Date(iso).toLocaleTimeString("es-PA", { hour: "numeric", minute: "2-digit", timeZone: "America/Panama" });
+const destino = (p: ReminderPost) => (p.placement === "story" ? "Historia" : "Publicación");
+
+/** A la hora programada: "es hora de publicar", con la descripción lista para copiar. */
+export function publishReminderEmail(name: string, p: ReminderPost, imageLinks: string[]) {
+  const description = [p.caption ?? "", (p.hashtags ?? []).join(" ")].filter(Boolean).join("\n\n");
+  const links = imageLinks.length
+    ? `<p>${imageLinks.map((u, i) => `<a href="${u}">Descargar imagen ${i + 1}</a>`).join(" · ")}<br><span style="font-size:12px;color:#8a7a8a">Los enlaces funcionan por 24 horas.</span></p>`
+    : "";
+  const desc =
+    p.placement === "story"
+      ? "<p>Es una <strong>historia</strong>: solo sube la imagen, no necesita descripción.</p>"
+      : `<p><strong>Descripción para copiar y pegar:</strong></p>
+         <div style="white-space:pre-wrap;background:#FAF5EF;border:1px solid #ecdcc4;border-radius:12px;padding:14px;font-size:14px">${e(description || "(sin descripción)")}</div>`;
+  return {
+    subject: `⏰ Es hora de publicar: ${p.title || destino(p)}`,
+    html: layout(
+      `${name}, es hora de publicar`,
+      `<p>Programaste esta ${destino(p).toLowerCase()} para hoy a las <strong>${hora(p.scheduled_at)}</strong>:
+       <strong>${e(p.title || "Publicación")}</strong>.</p>
+       ${desc}
+       ${links}
+       <ol style="padding-left:18px">
+         <li>Abre Markia y pulsa <strong>«Descargar imagen + descripción»</strong> en la publicación.</li>
+         <li>Súbela a Instagram como ${destino(p).toLowerCase()}${p.placement === "story" ? "" : " y pega la descripción"}.</li>
+         <li>Vuelve a Markia y pulsa <strong>«Marcar como publicado»</strong>.</li>
+       </ol>`,
+      { label: "Abrir mi calendario", url: `${siteUrl()}/dashboard/calendario` }
+    ),
+  };
+}
+
+/** Resumen de la mañana: todo lo que toca publicar hoy. */
+export function dailyAgendaEmail(name: string, posts: ReminderPost[]) {
+  const rows = posts
+    .map(
+      (p) => `<tr>
+        <td style="padding:8px 12px 8px 0;font-weight:bold;white-space:nowrap">${hora(p.scheduled_at)}</td>
+        <td style="padding:8px 0">${e(p.title || "Publicación")} <span style="color:#8C338A">· ${destino(p)}</span></td>
+      </tr>`
+    )
+    .join("");
+  return {
+    subject: `📅 Hoy te toca publicar ${posts.length} ${posts.length === 1 ? "vez" : "veces"} en Instagram`,
+    html: layout(
+      `${name}, esto es lo que publicas hoy`,
+      `<table style="border-collapse:collapse;width:100%">${rows}</table>
+       <p>Te enviaremos otro correo a la hora de cada publicación con su descripción lista para copiar.</p>`,
+      { label: "Ver y descargar", url: `${siteUrl()}/dashboard/calendario` }
+    ),
+  };
+}
+
+// ---------------------------------------------------------------------
 // Avisos para el administrador
 // ---------------------------------------------------------------------
 

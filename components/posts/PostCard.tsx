@@ -303,8 +303,8 @@ export function PostCard({ post, onUpdated, onDeleted }: Props) {
             )
           ) : (
             <p className="text-xs text-[#4A154B]/60">
-              Llegada la hora, descarga la imagen y súbela a Instagram. La publicación automática está incluida en el{" "}
-              <Link href="/dashboard/planes" className="font-semibold underline">Plan PRO</Link>.
+              📧 A esa hora te enviaremos un correo de recordatorio con la descripción lista para copiar. Descarga la
+              imagen, súbela a Instagram y luego pulsa «Marcar como publicado».
             </p>
           )}
         </div>

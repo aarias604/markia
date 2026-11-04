@@ -32,7 +32,6 @@ const NAV = [
   { href: "/dashboard/subir", label: "Subir publicación", icon: Upload },
   { href: "/dashboard/calendario", label: "Calendario", icon: CalendarDays },
   { href: "/dashboard/plantillas", label: "Plantillas", icon: LayoutTemplate },
-  { href: "/dashboard/instagram", label: "Instagram", icon: Send },
   { href: "/dashboard/marca", label: "Kit de marca", icon: Palette },
   { href: "/dashboard/marca-ia", label: "Marca con IA", icon: Wand2 },
   { href: "/dashboard/planes", label: "Planes", icon: CreditCard },
@@ -42,7 +41,13 @@ const NAV = [
 
 function NavLinks({ onNavigate, isAdmin }: { onNavigate?: () => void; isAdmin: boolean }) {
   const pathname = usePathname();
-  const items = isAdmin ? [...NAV, { href: "/dashboard/admin", label: "Administración", icon: ShieldCheck }] : NAV;
+  const items = isAdmin
+    ? [
+        ...NAV,
+        { href: "/dashboard/instagram", label: "Instagram (pruebas)", icon: Send },
+        { href: "/dashboard/admin", label: "Administración", icon: ShieldCheck },
+      ]
+    : NAV;
   return (
     <nav className="flex flex-col gap-1">
       {items.map((item) => {
