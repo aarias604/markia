@@ -88,9 +88,53 @@ async function exchangeCode(code: string) {
   return { token, expiresAt: expiresIn > 0 ? new Date(Date.now() + expiresIn * 1000).toISOString() : inDays(365) };
 }
 
+/** Pregunta a Meta qué cuentas de Instagram y páginas autorizó el usuario con este token. */
+async function grantedTargets(token: string) {
+  const { id, secret } = creds();
+  const info = await getJson(`${FB}/debug_token?${q({ input_token: token, access_token: `${id}|${secret}` })}`);
+  const data = (info.data ?? {}) as {
+    type?: string;
+    scopes?: string[];
+    granular_scopes?: { scope: string; target_ids?: string[] }[];
+  };
+  const ig = new Set<string>();
+  const pages = new Set<string>();
+  for (const g of data.granular_scopes ?? []) {
+    if (g.scope.startsWith("instagram_")) (g.target_ids ?? []).forEach((t) => ig.add(t));
+    if (g.scope.startsWith("pages_")) (g.target_ids ?? []).forEach((t) => pages.add(t));
+  }
+  return { type: data.type ?? "?", scopes: data.scopes ?? [], igIds: [...ig], pageIds: [...pages] };
+}
+
 /** Encuentra la cuenta profesional de Instagram a la que da acceso el token. */
 async function discoverAccount(token: string): Promise<{ mode: IgMode; igUserId: string; username: string }> {
   const errors: string[] = [];
+
+  // 0. Lo que el usuario autorizó (la forma más precisa con el inicio de sesión unificado)
+  try {
+    const g = await grantedTargets(token);
+    errors.push(`token=${g.type}; permisos=${g.scopes.join(",") || "ninguno"}; ig=${g.igIds.length}; páginas=${g.pageIds.length}`);
+    for (const igId of g.igIds) {
+      try {
+        const acc = await getJson(`${FB}/${igId}?${q({ fields: "id,username", access_token: token })}`);
+        return { mode: "facebook", igUserId: String(acc.id ?? igId), username: String(acc.username ?? "") };
+      } catch (e) {
+        errors.push(`ig ${igId}: ${(e as Error).message}`);
+      }
+    }
+    for (const pageId of g.pageIds) {
+      try {
+        const page = await getJson(`${FB}/${pageId}?${q({ fields: "instagram_business_account{id,username}", access_token: token })}`);
+        const acc = page.instagram_business_account as { id?: string; username?: string } | undefined;
+        if (acc?.id) return { mode: "facebook", igUserId: acc.id, username: acc.username ?? "" };
+        errors.push(`página ${pageId}: sin Instagram vinculado`);
+      } catch (e) {
+        errors.push(`página ${pageId}: ${(e as Error).message}`);
+      }
+    }
+  } catch (e) {
+    errors.push(`debug_token: ${(e as Error).message}`);
+  }
 
   // 1. Token de Instagram (graph.instagram.com)
   try {
