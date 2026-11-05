@@ -6,13 +6,13 @@
 
 export const LEGAL = {
   marca: "Markia",
-  razonSocial: "[Razón social o nombre del titular]",
+  razonSocial: "Adrian Arias",
   ruc: "[RUC] DV [00]",
   avisoOperacion: "[Número de Aviso de Operación]",
-  direccion: "[Dirección física], Ciudad de Panamá, República de Panamá",
+  direccion: "Juan Diaz, Ciudad de Panamá, República de Panamá",
   correoSoporte: "[hola@markiapa.com]",
   correoPrivacidad: "[hola@markiapa.com]",
-  telefono: "[+507 0000-0000]",
+  telefono: "[+507 6434-2146]",
   sitio: "https://markiapa.com",
   /** Cámbiala cada vez que modifiques un documento legal. */
   version: "2026-11-03",

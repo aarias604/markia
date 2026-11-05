@@ -36,8 +36,8 @@ const PASOS = [
 ];
 
 const PLANES = [
-  { name: "Plan Básico", price: "$19", items: ["10 publicaciones con IA al mes", "1 carrusel con IA al mes", "10 plantillas de diseño", "Descripción sugerida y hashtags", "Calendario y descarga en PNG"] },
-  { name: "Plan PRO", price: "$39", featured: true, items: ["26 publicaciones con IA al mes", "3 carruseles con IA al mes", "20 plantillas + 5 plantillas propias", "Publicación automática en Instagram (próximamente)", "Todo lo del Plan Básico"] },
+  { name: "Plan Básico", price: "$14.99", regular: "$19", items: ["10 publicaciones con IA al mes", "1 carrusel con IA al mes", "10 plantillas de diseño", "Descripción sugerida y hashtags", "Calendario y descarga en PNG"] },
+  { name: "Plan PRO", price: "$29.99", regular: "$39", featured: true, items: ["26 publicaciones con IA al mes", "3 carruseles con IA al mes", "20 plantillas + 5 plantillas propias", "Publicación automática en Instagram (próximamente)", "Todo lo del Plan Básico"] },
 ];
 
 const FAQ = [
@@ -222,7 +222,9 @@ export default function Home() {
             <div key={p.name}
               className={`rounded-3xl p-7 ${p.featured ? "bg-[#4A154B] text-[#FAF5EF] shadow-2xl" : "border border-[#D9B382]/50 bg-[#FDFBF7]"}`}>
               <p className="font-semibold">{p.name}</p>
-              <p className="mt-2 text-5xl font-bold">{p.price}<span className="text-base font-normal opacity-70">/mes</span></p>
+                            <span className="mt-3 inline-block rounded-full bg-[#D9B382] px-3 py-1 text-xs font-bold text-[#4A154B]">🚀 Precio de lanzamiento</span>
+              <p className="mt-2 text-lg line-through opacity-60">{p.regular}/mes</p>
+              <p className="text-5xl font-bold">{p.price}<span className="text-base font-normal opacity-70">/mes</span></p>
               <ul className="mt-6 space-y-2.5 text-sm">
                 {p.items.map((i) => (
                   <li key={i} className="flex gap-2"><Check className={`h-5 w-5 shrink-0 ${p.featured ? "text-[#D9B382]" : "text-[#8C338A]"}`} /> {i}</li>

@@ -10,6 +10,9 @@ import { createClient } from "@/lib/supabase/client";
 import type { Plan } from "@/lib/types";
 import { btnGold } from "@/lib/ui";
 
+// Precio normal (se muestra tachado mientras dure el precio de lanzamiento).
+const PRECIO_REGULAR: Record<string, number> = { basic: 1900, pro: 3900 };
+
 function features(p: Plan) {
   const carruseles = p.monthly_carousels ?? 0;
   const list = [
@@ -71,6 +74,12 @@ export default function PlanesPage() {
                   </span>
                 )}
                 <p className="font-semibold">{p.name}</p>
+                                {(PRECIO_REGULAR[p.id] ?? 0) > p.price_cents && (
+                  <>
+                    <span className="mt-3 inline-block rounded-full bg-[#D9B382] px-3 py-1 text-xs font-bold text-[#4A154B]">🚀 Precio de lanzamiento</span>
+                    <p className="mt-2 text-lg line-through opacity-60">{formatUSD(PRECIO_REGULAR[p.id])}/mes</p>
+                  </>
+                )}
                 <p className="mt-2 text-4xl font-bold">
                   {formatUSD(p.price_cents)}
                   <span className="text-base font-normal opacity-70">/mes</span>
