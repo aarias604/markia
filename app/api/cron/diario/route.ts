@@ -21,7 +21,8 @@ interface SubRow {
   user_id: string;
   next_due_date: string | null;
   subscription_status: SubscriptionStatus;
-  plans: { name: string; price_cents: number } | null;
+  plan_name: string;
+  monthly_price_cents: number; // precio congelado de cada cliente
 }
 
 export async function GET(request: NextRequest) {
@@ -36,23 +37,19 @@ export async function GET(request: NextRequest) {
   // Mantener los estados al día (por si pg_cron no está activo).
   await admin.rpc("refresh_subscription_statuses");
 
-  const { data: subs, error } = await admin
-    .from("subscriptions")
-    .select("user_id, next_due_date, subscription_status, plans(name, price_cents)")
-    .not("next_due_date", "is", null)
-    .not("subscription_status", "in", "(pending,canceled)");
+  const { data: subs, error } = await admin.rpc("get_billing_snapshot");
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  for (const s of (subs ?? []) as unknown as SubRow[]) {
+  for (const s of (subs ?? []) as SubRow[]) {
     try {
-      if (!s.plans || !s.next_due_date) continue;
+      if (!s.next_due_date) continue;
       const st = computeSubscriptionState({
         nextDueDate: s.next_due_date,
-        priceCents: s.plans.price_cents,
+        priceCents: s.monthly_price_cents,
         storedStatus: s.subscription_status,
       });
 
-      const plan = s.plans;
+      const plan = { name: s.plan_name, price_cents: s.monthly_price_cents };
       const due = s.next_due_date;
       let kind = "";
       let build: ((name: string) => { subject: string; html: string }) | null = null;

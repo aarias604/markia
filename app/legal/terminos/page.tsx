@@ -46,10 +46,24 @@ export default function TerminosPage() {
         <li>
           <strong>Cambio a PRO:</strong> si tienes el Plan Básico y estás al día, puedes cambiarte al Plan PRO pagando el primer
           mes PRO con 35% de descuento. El cambio aplica al confirmarse el pago y se suman 30 días a tu fecha de vencimiento.
-          Desde la siguiente cuota pagas el precio normal del Plan PRO.
+          Desde la siguiente cuota pagas el precio del Plan PRO vigente el día del cambio.
         </li>
         <li>Cada pago cubre un ciclo de 30 días. Las publicaciones no usadas no se acumulan al siguiente ciclo, salvo las compradas con el Boost.</li>
-        <li>Podemos cambiar los precios con al menos 15 días de aviso por correo. El cambio aplica desde tu siguiente renovación.</li>
+        <li>
+          <strong>Precio de lanzamiento:</strong> válido para nuevas suscripciones hasta el 31 de diciembre de 2026; los
+          clientes suscritos conservan su precio mientras su suscripción siga activa.
+        </li>
+        <li>
+          <strong>Promociones y precio congelado:</strong> las promociones aplican solo a suscripciones nuevas realizadas dentro
+          de sus fechas. El precio mensual con el que te suscribes (con o sin promoción) se mantiene en tus renovaciones
+          mientras tu suscripción siga activa, incluido el período de gracia. Si tu cuenta se suspende o la cancelas, al
+          reactivarla se aplica el precio vigente en ese momento. Al cambiarte a PRO, tu nuevo precio congelado es el precio
+          del Plan PRO vigente el día del cambio.
+        </li>
+        <li>
+          Podemos cambiar los precios para nuevos clientes en cualquier momento. Si tienes una suscripción activa, no subiremos
+          tu precio mensual sin avisarte por correo con al menos 15 días de anticipación.
+        </li>
       </ul>
 
       <h2>5. Renovación, atraso y suspensión</h2>

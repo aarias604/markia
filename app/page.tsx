@@ -13,6 +13,7 @@ import {
   Target,
   Wand2,
 } from "lucide-react";
+import { PricingCards } from "@/components/landing/PricingCards";
 import { PostImage } from "@/components/posts/PostImage";
 import { MarkiaLogo } from "@/components/ui/MarkiaLogo";
 import { LEGAL_PAGES } from "@/components/legal/LegalShell";
@@ -33,11 +34,6 @@ const PASOS = [
   { n: "2", title: "Configura tu marca", text: "Sube tu logo, elige tus colores, tu nicho y tu tono de voz." },
   { n: "3", title: "Genera con IA", text: "Escribe una idea o deja que Markia te proponga temas. Recibe texto, hashtags e imagen." },
   { n: "4", title: "Descarga y publica", text: "Organízalas en el calendario y descarga cada imagen o carrusel con su descripción sugerida, lista para Instagram." },
-];
-
-const PLANES = [
-  { name: "Plan Básico", price: "$14.99", regular: "$19", items: ["10 publicaciones con IA al mes", "1 carrusel con IA al mes", "10 plantillas de diseño", "Descripción sugerida y hashtags", "Calendario y descarga en PNG"] },
-  { name: "Plan PRO", price: "$29.99", regular: "$39", featured: true, items: ["26 publicaciones con IA al mes", "3 carruseles con IA al mes", "20 plantillas + 5 plantillas propias", "Publicación automática en Instagram (próximamente)", "Todo lo del Plan Básico"] },
 ];
 
 const FAQ = [
@@ -217,23 +213,7 @@ export default function Home() {
       <section id="planes" className="mx-auto max-w-4xl px-4 pb-20 sm:px-6">
         <p className="text-center text-sm font-bold uppercase tracking-widest text-[#8C338A]">Planes</p>
         <h2 className="mt-3 text-center text-3xl font-bold sm:text-4xl">Precios simples, sin contratos</h2>
-        <div className="mt-10 grid gap-5 sm:grid-cols-2">
-          {PLANES.map((p) => (
-            <div key={p.name}
-              className={`rounded-3xl p-7 ${p.featured ? "bg-[#4A154B] text-[#FAF5EF] shadow-2xl" : "border border-[#D9B382]/50 bg-[#FDFBF7]"}`}>
-              <p className="font-semibold">{p.name}</p>
-                            <span className="mt-3 inline-block rounded-full bg-[#D9B382] px-3 py-1 text-xs font-bold text-[#4A154B]">🚀 Precio de lanzamiento</span>
-              <p className="mt-2 text-lg line-through opacity-60">{p.regular}/mes</p>
-              <p className="text-5xl font-bold">{p.price}<span className="text-base font-normal opacity-70">/mes</span></p>
-              <ul className="mt-6 space-y-2.5 text-sm">
-                {p.items.map((i) => (
-                  <li key={i} className="flex gap-2"><Check className={`h-5 w-5 shrink-0 ${p.featured ? "text-[#D9B382]" : "text-[#8C338A]"}`} /> {i}</li>
-                ))}
-              </ul>
-              <Link href="/registro" className={`${p.featured ? btnGold : btnPrimary} mt-8 w-full`}>Elegir {p.name}</Link>
-            </div>
-          ))}
-        </div>
+        <PricingCards />
         <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-[#4A154B]/70">
           <span className="inline-flex items-center gap-2"><span className="rounded-md bg-[#0F4C81] px-2 py-0.5 text-xs font-bold text-white">Yappy</span> Pago desde tu celular</span>
           <span className="inline-flex items-center gap-2"><Coins className="h-4 w-4" /> Criptomonedas (USDT)</span>

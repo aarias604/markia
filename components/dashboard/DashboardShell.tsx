@@ -16,6 +16,7 @@ import {
   ShoppingBag,
   Send,
   Sparkles,
+  Tag,
   Upload,
   Wand2,
   X,
@@ -46,12 +47,15 @@ function NavLinks({ onNavigate, isAdmin }: { onNavigate?: () => void; isAdmin: b
         ...NAV,
         { href: "/dashboard/instagram", label: "Instagram (pruebas)", icon: Send },
         { href: "/dashboard/admin", label: "Administración", icon: ShieldCheck },
+        { href: "/dashboard/admin/precios", label: "Precios y promos", icon: Tag },
       ]
     : NAV;
   return (
     <nav className="flex flex-col gap-1">
       {items.map((item) => {
-        const active = item.href === "/dashboard" ? pathname === item.href : pathname === item.href || pathname.startsWith(item.href + "/");
+        const active = ["/dashboard", "/dashboard/admin"].includes(item.href)
+          ? pathname === item.href
+          : pathname === item.href || pathname.startsWith(item.href + "/");
         return (
           <Link
             key={item.href}

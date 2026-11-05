@@ -183,4 +183,8 @@ export interface BillingRow {
   amount_due_cents: number;
   show_banner: boolean;
   can_generate: boolean;
+  /** Precio regular del plan (sin promoción). */
+  regular_price_cents?: number;
+  /** El cliente tiene su precio congelado (al día o en período de gracia). */
+  price_locked?: boolean;
 }
