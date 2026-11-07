@@ -10,6 +10,7 @@ import {
   LayoutTemplate,
   LogOut,
   Menu,
+  MessageCircle,
   Palette,
   Gift,
   ShieldCheck,
@@ -32,6 +33,7 @@ const NAV = [
   { href: "/dashboard/generador", label: "Generador IA", icon: Sparkles },
   { href: "/dashboard/subir", label: "Subir publicación", icon: Upload },
   { href: "/dashboard/calendario", label: "Calendario", icon: CalendarDays },
+  { href: "/dashboard/whatsapp", label: "Avisos WhatsApp", icon: MessageCircle },
   { href: "/dashboard/plantillas", label: "Plantillas", icon: LayoutTemplate },
   { href: "/dashboard/marca", label: "Kit de marca", icon: Palette },
   { href: "/dashboard/marca-ia", label: "Marca con IA", icon: Wand2 },
@@ -75,7 +77,7 @@ function NavLinks({ onNavigate, isAdmin }: { onNavigate?: () => void; isAdmin: b
 }
 
 export function DashboardShell({ children }: { children: ReactNode }) {
-  const { billing, businessName, logoDataUrl, email, subscription, refresh, profile } = useDashboard();
+  const { billing, businessName, logoDataUrl, email, subscription, refresh, profile, autopay } = useDashboard();
   const [open, setOpen] = useState(false);
 
   async function logout() {
@@ -124,7 +126,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
       )}
 
       <div className="lg:pl-64">
-        {billing && <YappyRenewalBanner billing={billing} onPaid={refresh} />}
+        {billing && <YappyRenewalBanner billing={billing} onPaid={refresh} autopayDate={autopay?.next_charge_date ?? null} />}
 
         <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-[#D9B382]/40 bg-[#FDFBF7]/90 px-4 py-3 backdrop-blur sm:px-6">
           <button className="rounded-lg p-2 hover:bg-[#4A154B]/5 lg:hidden" onClick={() => setOpen(true)} aria-label="Abrir menú">

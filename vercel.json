@@ -1,6 +1,8 @@
 {
   "crons": [
     { "path": "/api/cron/diario", "schedule": "0 13 * * *" },
-    { "path": "/api/cron/publicar", "schedule": "*/5 * * * *" }
+    { "path": "/api/cron/whatsapp", "schedule": "0 14 * * *" },
+    { "path": "/api/cron/publicar", "schedule": "*/5 * * * *" },
+    { "path": "/api/cron/pagadito", "schedule": "20 * * * *" }
   ]
 }

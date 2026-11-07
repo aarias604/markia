@@ -42,7 +42,15 @@ export default function TerminosPage() {
           Planes antes de pagar.
         </li>
         <li>Los precios están en dólares de los Estados Unidos (USD). [Confirmar con tu contador si incluyen ITBMS.]</li>
-        <li>Puedes pagar con Yappy Comercial o con criptomonedas (USDT) según las instrucciones del sitio. Los pagos con cripto se confirman manualmente en un plazo de hasta 24 horas.</li>
+        <li>Puedes pagar con Yappy Comercial, con tarjeta de crédito o débito (procesada por Pagadito) o con criptomonedas (USDT) según las instrucciones del sitio. Los pagos con cripto se confirman manualmente en un plazo de hasta 24 horas.</li>
+        <li>
+          <strong>Renovación automática con tarjeta:</strong> si la activas al pagar con tarjeta, autorizas a Markia a cobrar
+          tu mensualidad a esa tarjeta, a través de Pagadito, en cada fecha de pago y por el monto de tu precio congelado.
+          Los cobros se programan por un máximo de 12 meses; al terminar te pediremos renovar la autorización. Puedes
+          cancelarla en cualquier momento desde «Planes» y los cobros futuros se anulan. Si un cobro es rechazado, la
+          renovación automática se desactiva y aplican las reglas de período de gracia y suspensión. Si te cambias de plan,
+          se cancela la autorización anterior. Markia no ve ni guarda los datos de tu tarjeta.
+        </li>
         <li>
           <strong>Cambio a PRO:</strong> si tienes el Plan Básico y estás al día, puedes cambiarte al Plan PRO pagando el primer
           mes PRO con 35% de descuento. El cambio aplica al confirmarse el pago y se suman 30 días a tu fecha de vencimiento.

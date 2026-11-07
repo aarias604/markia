@@ -66,6 +66,7 @@ export interface Profile {
   full_name: string | null;
   business_name: string | null;
   phone?: string | null;
+  whatsapp_opt_in?: boolean;
   is_admin?: boolean;
   onboarding_completed: boolean;
 }

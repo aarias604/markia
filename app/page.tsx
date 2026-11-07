@@ -191,7 +191,7 @@ export default function Home() {
               ))}
             </ul>
             <div className="mt-8 flex flex-wrap items-center gap-4">
-              <Link href="/registro" className={btnGold}>Quiero mi marca · $24.99</Link>
+              <Link href="/registro" className={btnGold}>Quiero mi marca · $19.99</Link>
               <span className="text-xs text-[#FAF5EF]/60">Pago único. Disponible en la Tienda de tu cuenta.</span>
             </div>
           </div>

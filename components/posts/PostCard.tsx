@@ -90,7 +90,13 @@ export function PostCard({ post, onUpdated, onDeleted }: Props) {
     setBusy(true);
     setError(null);
     try {
-      const media_paths = auto ? await prepareMedia() : post.media_paths ?? null;
+      // Siempre preparamos las imágenes: sirven para Instagram automático y para el recordatorio por WhatsApp.
+      let media_paths: string[] | null = post.media_paths ?? null;
+      try {
+        media_paths = await prepareMedia();
+      } catch (err) {
+        if (auto) throw err; // sin imágenes no se puede publicar solo
+      }
       const status: PostStatus = post.status === "published" ? "published" : "scheduled";
       await save({ scheduled_at: at.toISOString(), status, placement, auto_publish: auto, media_paths, publish_attempts: 0, error_message: null } as Partial<Post>);
     } catch (e) {

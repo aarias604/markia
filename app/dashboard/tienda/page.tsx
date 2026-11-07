@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { LayoutTemplate, Palette, Zap } from "lucide-react";
 import { useDashboard } from "@/components/dashboard/DashboardContext";
+import { CardReturnNotice } from "@/components/billing/CardReturnNotice";
 import { YappyCheckout } from "@/components/billing/YappyCheckout";
 import { InlineLoader } from "@/components/ui/Loader";
 import { formatUSD } from "@/lib/billing/subscription-state";
@@ -53,7 +54,9 @@ export default function TiendaPage() {
   return (
     <div>
       <h1 className="text-2xl font-bold">Tienda</h1>
-      <p className="mb-8 mt-1 text-[#4A154B]/70">Extras para tu marca. Pago único con Yappy.</p>
+      <p className="mb-8 mt-1 text-[#4A154B]/70">Extras para tu marca. Pago único con Yappy, tarjeta o cripto.</p>
+
+      <CardReturnNotice />
 
       {done && <p className="mb-6 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{done}</p>}
 

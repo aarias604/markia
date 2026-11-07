@@ -1,13 +1,13 @@
 -- =====================================================================
 -- Markia · Migración Fase 13 · Precios congelados y promociones
--- 1. plans.price_cents pasa a ser el PRECIO REGULAR (normal).
+-- 1. plans.price_cents pasa a ser el PRECIO REGULAR (normal): Básico $15.99, PRO $22.99.
 -- 2. Tabla promotions: descuentos por porcentaje o precio fijo, por plan
 --    o para todos, con fechas. Solo aplican a suscripciones nuevas.
 -- 3. Cada suscripción guarda su precio congelado (locked_price_cents).
 --    Mientras la cuenta esté al día o en período de gracia paga ese
 --    precio (o el regular, si algún día bajas el regular por debajo). Si se suspende o se
 --    cancela, al volver paga el precio vigente y se congela el nuevo.
--- 4. Lanzamiento: Básico $14.99 y PRO $29.99 hasta el 31/12/2026.
+-- 4. Lanzamiento: Básico $9.99 y PRO $16.99 hasta el 31/12/2026.
 -- Se puede ejecutar más de una vez.
 -- =====================================================================
 
@@ -41,17 +41,22 @@ alter table public.payments
 -- ---------------------------------------------------------------------
 -- 2. Precios de lanzamiento
 -- ---------------------------------------------------------------------
--- Si antes bajaste los planes a 14.99 / 29.99, vuelven a su precio regular.
-update public.plans set price_cents = 1900 where id = 'basic' and price_cents = 1499;
-update public.plans set price_cents = 3900 where id = 'pro'   and price_cents = 2999;
+-- Precio regular: Básico $15.99 y PRO $22.99 (reemplaza $19 / $39 o los $14.99 / $29.99 de prueba).
+-- Si después lo cambias desde el panel, volver a ejecutar este archivo no lo toca.
+update public.plans set price_cents = 1599 where id = 'basic' and price_cents in (1900, 1499);
+update public.plans set price_cents = 2299 where id = 'pro'   and price_cents in (3900, 2999);
 
 insert into public.promotions (name, label, plan_id, promo_price_cents, starts_on, ends_on)
-select 'Lanzamiento Básico', 'Precio de lanzamiento', 'basic', 1499, date '2026-11-01', date '2026-12-31'
+select 'Lanzamiento Básico', 'Precio de lanzamiento', 'basic', 999, date '2026-11-01', date '2026-12-31'
 where not exists (select 1 from public.promotions where name = 'Lanzamiento Básico');
 
 insert into public.promotions (name, label, plan_id, promo_price_cents, starts_on, ends_on)
-select 'Lanzamiento PRO', 'Precio de lanzamiento', 'pro', 2999, date '2026-11-01', date '2026-12-31'
+select 'Lanzamiento PRO', 'Precio de lanzamiento', 'pro', 1699, date '2026-11-01', date '2026-12-31'
 where not exists (select 1 from public.promotions where name = 'Lanzamiento PRO');
+
+-- Si ya habías ejecutado esta migración con $14.99 / $29.99, se ajustan a $9.99 / $16.99.
+update public.promotions set promo_price_cents = 999  where name = 'Lanzamiento Básico' and promo_price_cents = 1499;
+update public.promotions set promo_price_cents = 1699 where name = 'Lanzamiento PRO'    and promo_price_cents = 2999;
 
 -- ---------------------------------------------------------------------
 -- 3. Precio vigente para nuevas suscripciones (regular o con promoción)

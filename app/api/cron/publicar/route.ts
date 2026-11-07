@@ -4,6 +4,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { igPublish } from "@/lib/instagram";
 import { layout, publishReminderEmail, sendOnce, siteUrl, userEmail, type ReminderPost } from "@/lib/notifications";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { WA_TEMPLATES, sendWhatsAppOnce, waParam, waPhone, whatsappConfigured } from "@/lib/whatsapp";
 
 const MAX_POR_VUELTA = 5;
 const MAX_INTENTOS = 3;
@@ -152,5 +153,48 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  return NextResponse.json({ ok: true, processed: results.length, results, reminders });
+  // Recordatorio por WhatsApp (imagen + descripción + hashtags + enlace), para quien lo activó.
+  let whatsapp = 0;
+  if (whatsappConfigured()) {
+    for (const p of (manual ?? []) as (ReminderPost & { user_id: string; scheduled_at: string; media_paths: string[] | null })[]) {
+      try {
+        const { data: profile } = await admin
+          .from("profiles")
+          .select("full_name, phone, whatsapp_opt_in")
+          .eq("id", p.user_id)
+          .maybeSingle();
+        const to = profile?.whatsapp_opt_in ? waPhone(profile.phone) : null;
+        if (!to || !p.media_paths?.length) continue;
+        const { data: active } = await admin.rpc("can_generate_posts", { p_user_id: p.user_id });
+        if (!active) continue;
+
+        const { data: signed } = await admin.storage.from("post-media").createSignedUrl(p.media_paths[0], 86400);
+        if (!signed?.signedUrl) continue;
+
+        const hora = new Date(p.scheduled_at).toLocaleTimeString("es-PA", { timeZone: "America/Panama", hour: "numeric", minute: "2-digit" });
+        const isStory = p.placement === "story";
+        const extra = p.media_paths.length > 1 ? ` (${p.media_paths.length} imágenes, descárgalas en Markia)` : "";
+        const sent = await sendWhatsAppOnce(admin, {
+          userId: p.user_id,
+          kind: "post_reminder",
+          ref: p.id,
+          to,
+          template: WA_TEMPLATES.reminder,
+          headerImageUrl: signed.signedUrl,
+          bodyParams: [
+            waParam((profile?.full_name ?? "").split(" ")[0] || "emprendedor", 30),
+            waParam(hora, 20),
+            waParam(`${p.title || (isStory ? "tu historia" : "tu publicación")}${extra}`, 120),
+            isStory ? "Es una historia: Instagram no muestra descripción. Puedes agregar texto o stickers en la app." : waParam(p.caption, 550),
+            isStory ? "—" : waParam((p.hashtags ?? []).join(" "), 200),
+          ],
+        });
+        if (sent.ok) whatsapp++;
+      } catch (err) {
+        console.error("[cron] whatsapp", p.id, err);
+      }
+    }
+  }
+
+  return NextResponse.json({ ok: true, processed: results.length, results, reminders, whatsapp });
 }

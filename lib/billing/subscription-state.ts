@@ -16,8 +16,8 @@ export type SubscriptionStatus =
   | "canceled";
 
 export const PLAN_PRICES_CENTS: Record<PlanId, number> = {
-  basic: 1900,
-  pro: 3900,
+  basic: 1599,
+  pro: 2299,
 };
 
 export const WARNING_DAYS = 5;

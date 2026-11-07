@@ -121,7 +121,7 @@ function JoinView({ onJoined }: { onJoined: () => Promise<void> }) {
           <li><strong>4.</strong> Cada comisión se libera a los {REGLAS.referidoEsperaDias} días. Desde US${REGLAS.retiroMinimo} disponibles, pides tu retiro por banco o cripto.</li>
         </ol>
         <p className="mt-4 rounded-xl bg-[#FAF5EF] p-3 text-xs text-[#4A154B]/70">
-          Ejemplo: 5 referidos en Plan PRO ($39) te generan $19.50 al mes.
+          Ejemplo: 5 referidos en Plan PRO pagando $22.99 te generan $11.50 al mes.
         </p>
       </div>
       <div className={`${cardCls} space-y-4`}>

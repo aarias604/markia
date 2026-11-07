@@ -23,6 +23,8 @@ interface DashboardData {
   logoDataUrl: string | null;
   templates: Template[];
   instagram: { username: string | null; token_expires_at: string; last_error: string | null } | null;
+  /** Cobro automático con tarjeta activo (Pagadito). */
+  autopay: { mandate_id: string; plan_id: string; monthly_price_cents: number; next_charge_date: string | null; remaining: number; last_charge_date: string } | null;
 }
 
 interface DashboardCtx extends DashboardData {
@@ -52,13 +54,14 @@ async function loadData(): Promise<DashboardData | null> {
   } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const [profileRes, subRes, billingRes, kitRes, tplRes, igRes] = await Promise.all([
+  const [profileRes, subRes, billingRes, kitRes, tplRes, igRes, autopayRes] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
     supabase.from("subscriptions").select("*, plans(*)").eq("user_id", user.id).maybeSingle(),
     supabase.rpc("get_my_billing").maybeSingle(),
     supabase.from("brand_kits").select("*").eq("user_id", user.id).maybeSingle(),
     supabase.from("templates").select("*").order("kind").order("name"),
     supabase.rpc("get_my_instagram").maybeSingle(),
+    supabase.rpc("get_my_autopay").maybeSingle(),
   ]);
 
   const firstError = [profileRes, subRes, kitRes, tplRes].find((r) => r.error)?.error;
@@ -86,6 +89,7 @@ async function loadData(): Promise<DashboardData | null> {
     logoDataUrl,
     templates,
     instagram: (igRes.data as DashboardData["instagram"]) ?? null,
+    autopay: (autopayRes.data as DashboardData["autopay"]) ?? null,
   };
 }
 

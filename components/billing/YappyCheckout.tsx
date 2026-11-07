@@ -1,6 +1,6 @@
 "use client";
 
-// Ventana de pago con el botón oficial de Yappy (<btn-yappy>).
+// Ventana de pago: Yappy (<btn-yappy>), tarjeta (Pagadito) o cripto (USDT).
 // 1) Al tocar el botón, crea la orden en /api/yappy/create-order.
 // 2) Yappy cobra en el celular del cliente.
 // 3) Esperamos la confirmación (IPN) consultando /api/yappy/status.
@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { CheckCircle2, Clock, Loader2, Smartphone, X } from "lucide-react";
 import { useDashboard } from "@/components/dashboard/DashboardContext";
+import { CardPay } from "@/components/billing/CardPay";
 import { CryptoPay } from "@/components/billing/CryptoPay";
 import { errorCls, inputCls, labelCls } from "@/lib/ui";
 
@@ -61,7 +62,7 @@ export function YappyCheckout({ open, onClose, title, description, amountLabel, 
   const paymentId = useRef<string | null>(null);
   const onPaidRef = useRef(onPaid);
   const [stage, setStage] = useState<Stage>("ready");
-  const [method, setMethod] = useState<"yappy" | "crypto">("yappy");
+  const [method, setMethod] = useState<"yappy" | "card" | "crypto">("yappy");
   const [error, setError] = useState<string | null>(null);
   const [offline, setOffline] = useState(false);
 
@@ -190,17 +191,18 @@ export function YappyCheckout({ open, onClose, title, description, amountLabel, 
             </div>
 
             {stage === "ready" && (
-              <div className="mt-5 grid grid-cols-2 gap-1 rounded-full bg-[#4A154B]/5 p-1 text-sm font-semibold">
-                {(["yappy", "crypto"] as const).map((m) => (
+              <div className="mt-5 grid grid-cols-3 gap-1 rounded-full bg-[#4A154B]/5 p-1 text-sm font-semibold">
+                {(["yappy", "card", "crypto"] as const).map((m) => (
                   <button key={m} onClick={() => setMethod(m)}
                     className={`rounded-full py-2 transition ${method === m ? "bg-white shadow" : "text-[#4A154B]/60"}`}>
-                    {m === "yappy" ? "Yappy" : "Cripto (USDT)"}
+                    {m === "yappy" ? "Yappy" : m === "card" ? "Tarjeta" : "USDT"}
                   </button>
                 ))}
               </div>
             )}
 
             {stage === "ready" && method === "crypto" && <CryptoPay request={request} />}
+            {stage === "ready" && method === "card" && <CardPay request={request} />}
 
             <div className={stage === "ready" && method === "yappy" ? "mt-5" : "hidden"}>
               <label htmlFor="yappy-phone" className={labelCls}>Tu número de celular con Yappy</label>

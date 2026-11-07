@@ -267,7 +267,7 @@ export default function PreciosAdminPage() {
             </div>
             <div>
               <label className={labelCls}>{form.mode === "pct" ? "Descuento (%)" : "Precio promocional mensual ($)"}</label>
-              <input className={inputCls} inputMode="decimal" value={form.value} placeholder={form.mode === "pct" ? "20" : "14.99"}
+              <input className={inputCls} inputMode="decimal" value={form.value} placeholder={form.mode === "pct" ? "20" : "9.99"}
                 onChange={(e) => setForm({ ...form, value: e.target.value })} />
             </div>
             <div className="grid grid-cols-2 gap-2">

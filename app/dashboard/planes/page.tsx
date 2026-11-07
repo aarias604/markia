@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { Check, Lock } from "lucide-react";
 import { useDashboard } from "@/components/dashboard/DashboardContext";
+import { AutopayCard } from "@/components/billing/AutopayCard";
+import { CardReturnNotice } from "@/components/billing/CardReturnNotice";
 import { YappyCheckout } from "@/components/billing/YappyCheckout";
 import { InlineLoader } from "@/components/ui/Loader";
 import { formatUSD } from "@/lib/billing/subscription-state";
@@ -34,7 +36,10 @@ export default function PlanesPage() {
   return (
     <div>
       <h1 className="text-2xl font-bold">Planes</h1>
-      <p className="mb-8 mt-1 text-[#4A154B]/70">Paga mes a mes con Yappy Comercial. Sin contratos.</p>
+      <p className="mb-8 mt-1 text-[#4A154B]/70">Paga con Yappy, tarjeta o cripto. Con tarjeta puedes activar la renovación automática. Sin contratos.</p>
+
+      <CardReturnNotice />
+      <AutopayCard />
 
       {loadError && <p className={errorCls}>No se pudieron cargar los planes: {loadError}</p>}
 

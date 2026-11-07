@@ -178,7 +178,7 @@ export async function notifyPaymentConfirmed(admin: SupabaseClient, paymentId: s
       subject: `${title} · ${formatUSD(p.amount_cents)}`,
       html: layout(
         `${name}, ${title.charAt(0).toLowerCase()}${title.slice(1)}`,
-        `<p>Recibimos tu pago de <strong>${formatUSD(p.amount_cents)}</strong> por ${p.method === "crypto" ? "criptomonedas" : "Yappy"}.</p>${detail}`,
+        `<p>Recibimos tu pago de <strong>${formatUSD(p.amount_cents)}</strong> por ${p.method === "crypto" ? "criptomonedas" : p.method === "card" ? "tarjeta" : "Yappy"}.</p>${detail}`,
         cta
       ),
     });

@@ -40,7 +40,16 @@ function diasTexto(n: number) {
   return `en ${n} días`;
 }
 
-export function YappyRenewalBanner({ billing, onPaid }: { billing: BillingRow; onPaid?: () => void | Promise<void> }) {
+export function YappyRenewalBanner({
+  billing,
+  onPaid,
+  autopayDate,
+}: {
+  billing: BillingRow;
+  onPaid?: () => void | Promise<void>;
+  /** Fecha del próximo cobro automático con tarjeta, si está activo. */
+  autopayDate?: string | null;
+}) {
   const [offerOpen, setOfferOpen] = useState(true);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
 
@@ -55,7 +64,20 @@ export function YappyRenewalBanner({ billing, onPaid }: { billing: BillingRow; o
   let Icon = BellRing;
   let title = "";
   let detail = "";
-  let cta = "Renovar con Yappy Comercial";
+  let cta = "Renovar ahora";
+
+  if (variant === "expiring_soon" && autopayDate) {
+    // Cobro automático activo: solo informamos.
+    const [y, m, d] = autopayDate.split("-").map(Number);
+    const when = new Date(y, m - 1, d).toLocaleDateString("es-PA", { day: "numeric", month: "long" });
+    return (
+      <div role="status" className={`w-full ${s.wrap}`}>
+        <p className="mx-auto max-w-7xl px-4 py-2.5 text-sm sm:px-6">
+          💳 Tu {billing.plan_name} se renovará solo: el {when} cobraremos {monthly} a tu tarjeta.
+        </p>
+      </div>
+    );
+  }
 
   if (variant === "expiring_soon") {
     title = `Tu ${billing.plan_name} vence ${diasTexto(billing.days_until_due ?? 0)}`;
@@ -64,7 +86,7 @@ export function YappyRenewalBanner({ billing, onPaid }: { billing: BillingRow; o
     Icon = AlertTriangle;
     title = `Tienes 1 mes vencido (${monthly}). Paga antes de 30 días para evitar suspensión.`;
     detail = `Para ponerte al día pagas 2 meses (vencido + entrante): ${due}. Te quedan ${billing.days_left_in_grace ?? 0} día(s) de gracia.`;
-    cta = `Pagar ${due} con Yappy Comercial`;
+    cta = `Pagar ${due}`;
   } else {
     Icon = Lock;
     title = "Tu cuenta está suspendida";
@@ -192,7 +214,7 @@ function ReactivationOffer({
                 onClick={onPay}
                 className="w-full rounded-full bg-[#4A154B] px-5 py-3 text-sm font-bold text-[#FAF5EF] hover:bg-[#6B21A8]"
               >
-                Reactivar por {formatUSD(billing.amount_due_cents)} con Yappy
+                Reactivar por {formatUSD(billing.amount_due_cents)}
               </button>
               <p className="text-center text-xs text-[#4A154B]/60">
                 Al confirmarse el pago tu cuenta se reactiva automáticamente.
