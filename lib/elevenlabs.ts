@@ -1,9 +1,12 @@
 // ElevenLabs: voz de los videos con los tiempos de cada letra (para cortar escenas y subtítulos). Solo servidor.
 import type { Alignment } from "@/lib/video-timing";
 
+// Limpia espacios y comillas que a veces se cuelan al pegar en Vercel.
+const clean = (v?: string) => (v ?? "").trim().replace(/^["']|["']$/g, "").trim();
+
 const VOICES = {
-  female: process.env.ELEVENLABS_VOICE_FEMALE || "EXAVITQu4vr4xnSDxMaL",
-  male: process.env.ELEVENLABS_VOICE_MALE || "JBFqnCBsd6RMkjVDRZzb",
+  female: clean(process.env.ELEVENLABS_VOICE_FEMALE) || "EXAVITQu4vr4xnSDxMaL",
+  male: clean(process.env.ELEVENLABS_VOICE_MALE) || "JBFqnCBsd6RMkjVDRZzb",
 };
 
 export const elevenConfigured = () => !!process.env.ELEVENLABS_API_KEY;
@@ -14,7 +17,7 @@ export async function textToSpeech(text: string, voice: "female" | "male") {
     `https://api.elevenlabs.io/v1/text-to-speech/${VOICES[voice]}/with-timestamps?output_format=mp3_44100_128`,
     {
       method: "POST",
-      headers: { "xi-api-key": process.env.ELEVENLABS_API_KEY ?? "", "Content-Type": "application/json" },
+      headers: { "xi-api-key": clean(process.env.ELEVENLABS_API_KEY), "Content-Type": "application/json" },
       body: JSON.stringify({
         text,
         model_id: process.env.ELEVENLABS_MODEL || "eleven_multilingual_v2",
@@ -24,7 +27,7 @@ export async function textToSpeech(text: string, voice: "female" | "male") {
   );
   if (!res.ok) {
     const detail = await res.text().catch(() => "");
-    throw new Error(`ElevenLabs HTTP ${res.status}: ${detail.slice(0, 200)}`);
+    throw new Error(`ElevenLabs HTTP ${res.status} (voz ${voice === "male" ? "hombre" : "mujer"}: ${VOICES[voice]}): ${detail.slice(0, 160)}`);
   }
   const json = (await res.json()) as { audio_base64: string; alignment?: Alignment; normalized_alignment?: Alignment };
   const alignment = json.alignment ?? json.normalized_alignment;

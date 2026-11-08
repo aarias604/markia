@@ -117,6 +117,7 @@ export async function POST(request: Request) {
     console.error("[video/render]", e);
     await admin.rpc("refund_video_quota", { p_video_id: video.id });
     await admin.from("videos").update({ status: "failed", error: String(e).slice(0, 300), updated_at: new Date().toISOString() }).eq("id", video.id);
-    return fail("No se pudo crear el video. No se descontó tu cupo. Inténtalo de nuevo.", 502);
+    const detail = (e instanceof Error ? e.message : String(e)).replace(/(sk_|ghp_|github_pat_)[A-Za-z0-9_]+/g, "***").slice(0, 220);
+    return fail(`No se pudo crear el video. No se descontó tu cupo. Detalle: ${detail}`, 502);
   }
 }
