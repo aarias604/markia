@@ -124,8 +124,17 @@ async function discoverAccount(token: string): Promise<{ mode: IgMode; igUserId:
     }
     for (const pageId of g.pageIds) {
       try {
-        const page = await getJson(`${FB}/${pageId}?${q({ fields: "instagram_business_account{id,username}", access_token: token })}`);
-        const acc = page.instagram_business_account as { id?: string; username?: string } | undefined;
+        const fields = "instagram_business_account{id,username},connected_instagram_account{id,username},access_token";
+        const page = await getJson(`${FB}/${pageId}?${q({ fields, access_token: token })}`);
+        type Acc = { id?: string; username?: string } | undefined;
+        let acc = (page.instagram_business_account ?? page.connected_instagram_account) as Acc;
+        // Algunas cuentas solo muestran el Instagram con el token de la página.
+        if (!acc?.id && typeof page.access_token === "string") {
+          const viaPage = await getJson(
+            `${FB}/${pageId}?${q({ fields: "instagram_business_account{id,username},connected_instagram_account{id,username}", access_token: page.access_token })}`
+          );
+          acc = (viaPage.instagram_business_account ?? viaPage.connected_instagram_account) as Acc;
+        }
         if (acc?.id) return { mode: "facebook", igUserId: acc.id, username: acc.username ?? "" };
         errors.push(`página ${pageId}: sin Instagram vinculado`);
       } catch (e) {
@@ -147,12 +156,12 @@ async function discoverAccount(token: string): Promise<{ mode: IgMode; igUserId:
   // 2. Páginas de Facebook con cuenta de Instagram vinculada
   try {
     const pages = await getJson(
-      `${FB}/me/accounts?${q({ fields: "name,instagram_business_account{id,username}", access_token: token })}`
+      `${FB}/me/accounts?${q({ fields: "name,instagram_business_account{id,username},connected_instagram_account{id,username}", access_token: token })}`
     );
-    for (const p of (pages.data as { instagram_business_account?: { id: string; username?: string } }[]) ?? []) {
-      if (p.instagram_business_account?.id) {
-        return { mode: "facebook", igUserId: p.instagram_business_account.id, username: p.instagram_business_account.username ?? "" };
-      }
+    type PageRow = { instagram_business_account?: { id: string; username?: string }; connected_instagram_account?: { id: string; username?: string } };
+    for (const p of (pages.data as PageRow[]) ?? []) {
+      const acc = p.instagram_business_account ?? p.connected_instagram_account;
+      if (acc?.id) return { mode: "facebook", igUserId: acc.id, username: acc.username ?? "" };
     }
     errors.push("me/accounts: ninguna página tiene Instagram vinculado");
   } catch (e) {
