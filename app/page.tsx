@@ -13,6 +13,7 @@ import {
   Target,
   Wand2,
 } from "lucide-react";
+import { DemoVideos } from "@/components/landing/DemoVideos";
 import { PricingCards } from "@/components/landing/PricingCards";
 import { PostImage } from "@/components/posts/PostImage";
 import { MarkiaLogo } from "@/components/ui/MarkiaLogo";
@@ -174,6 +175,8 @@ export default function Home() {
       </section>
 
       {/* Generación de marca */}
+      <DemoVideos />
+
       <section id="marca" className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
         <div className="grid items-center gap-12 overflow-hidden rounded-3xl bg-gradient-to-br from-[#4A154B] via-[#6B21A8] to-[#8C338A] p-8 text-[#FAF5EF] sm:p-12 lg:grid-cols-2">
           <div>

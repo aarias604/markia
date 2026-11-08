@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import {
   CalendarDays,
+  Clapperboard,
   CreditCard,
   LayoutDashboard,
   LayoutTemplate,
@@ -17,6 +18,7 @@ import {
   ShoppingBag,
   Send,
   Sparkles,
+  Star,
   Tag,
   Upload,
   Wand2,
@@ -31,10 +33,12 @@ import { createClient } from "@/lib/supabase/client";
 const NAV = [
   { href: "/dashboard", label: "Inicio", icon: LayoutDashboard },
   { href: "/dashboard/generador", label: "Generador IA", icon: Sparkles },
+  { href: "/dashboard/videos", label: "Videos", icon: Clapperboard },
   { href: "/dashboard/subir", label: "Subir publicación", icon: Upload },
   { href: "/dashboard/calendario", label: "Calendario", icon: CalendarDays },
   { href: "/dashboard/whatsapp", label: "Avisos WhatsApp", icon: MessageCircle },
   { href: "/dashboard/plantillas", label: "Plantillas", icon: LayoutTemplate },
+  { href: "/dashboard/destacadas", label: "Destacadas", icon: Star },
   { href: "/dashboard/marca", label: "Kit de marca", icon: Palette },
   { href: "/dashboard/marca-ia", label: "Marca con IA", icon: Wand2 },
   { href: "/dashboard/planes", label: "Planes", icon: CreditCard },

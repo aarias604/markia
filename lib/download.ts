@@ -101,3 +101,38 @@ export function slugify(text: string) {
       .slice(0, 40) || "publicacion"
   );
 }
+
+/** Convierte un elemento SVG en PNG (Blob) del tamaño indicado. Fondo transparente si el SVG no lo pinta. */
+export async function svgToPngBlob(svg: SVGSVGElement, width: number, height: number) {
+  const clone = svg.cloneNode(true) as SVGSVGElement;
+  clone.setAttribute("width", String(width));
+  clone.setAttribute("height", String(height));
+  clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+  const xml = new XMLSerializer().serializeToString(clone);
+  const img = new Image();
+  await new Promise<void>((resolve, reject) => {
+    img.onload = () => resolve();
+    img.onerror = () => reject(new Error("No se pudo preparar la imagen."));
+    img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(xml);
+  });
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Tu navegador no permite crear imágenes.");
+  ctx.drawImage(img, 0, 0, width, height);
+  return new Promise<Blob>((resolve, reject) =>
+    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("No se pudo crear el PNG."))), "image/png")
+  );
+}
+
+export function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}

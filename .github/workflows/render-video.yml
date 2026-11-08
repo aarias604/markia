@@ -1,0 +1,77 @@
+# Crea los videos de Markia con Remotion. Lo inicia Markia (lib/remotion-render.ts).
+# Secretos necesarios en GitHub (Settings → Secrets and variables → Actions):
+#   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, CRON_SECRET
+# Variable opcional: MARKIA_URL (por defecto https://markiapa.com)
+name: Render video
+
+on:
+  workflow_dispatch:
+    inputs:
+      video_id:
+        description: "ID del video"
+        required: true
+      folder:
+        description: "Carpeta del video en Supabase (usuario/video)"
+        required: true
+
+concurrency:
+  group: render-${{ inputs.video_id }}
+  cancel-in-progress: false
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      VIDEO_ID: ${{ inputs.video_id }}
+      FOLDER: ${{ inputs.folder }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      CRON_SECRET: ${{ secrets.CRON_SECRET }}
+      MARKIA_URL: ${{ vars.MARKIA_URL || 'https://markiapa.com' }}
+    steps:
+      - name: Validar datos
+        run: |
+          [[ "$VIDEO_ID" =~ ^[0-9a-f-]{36}$ ]] || { echo "video_id inválido"; exit 1; }
+          [[ "$FOLDER" =~ ^[0-9a-f-]{36}/[0-9a-f-]{36}$ ]] || { echo "folder inválido"; exit 1; }
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci --no-audit --no-fund
+
+      - name: Descargar datos del video
+        run: |
+          curl -sSf -o props.json \
+            -H "Authorization: Bearer $SUPABASE_KEY" -H "apikey: $SUPABASE_KEY" \
+            "$SUPABASE_URL/storage/v1/object/videos/$FOLDER/props.json"
+
+      - name: Crear el video
+        run: npx remotion render remotion/index.ts MarkiaVideo out/video.mp4 --props=props.json --codec=h264 --crf=20 --timeout=120000 --log=info
+
+      - name: Subir el video a Supabase
+        run: |
+          curl -sSf -X POST \
+            -H "Authorization: Bearer $SUPABASE_KEY" -H "apikey: $SUPABASE_KEY" \
+            -H "Content-Type: video/mp4" -H "x-upsert: true" \
+            --data-binary @out/video.mp4 \
+            "$SUPABASE_URL/storage/v1/object/videos/$FOLDER/video.mp4"
+
+      - name: Avisar a Markia
+        if: success()
+        run: |
+          curl -sS -X POST "$MARKIA_URL/api/video/listo" \
+            -H "Authorization: Bearer $CRON_SECRET" -H "Content-Type: application/json" \
+            -d "{\"videoId\":\"$VIDEO_ID\",\"ok\":true}"
+
+      - name: Avisar a Markia del error
+        if: failure()
+        run: |
+          curl -sS -X POST "$MARKIA_URL/api/video/listo" \
+            -H "Authorization: Bearer $CRON_SECRET" -H "Content-Type: application/json" \
+            -d "{\"videoId\":\"$VIDEO_ID\",\"ok\":false,\"error\":\"El render falló en GitHub Actions\"}"

@@ -5,6 +5,8 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Image as ImageIcon, Layers, Loader2, Lock, Sparkles } from "lucide-react";
 import { useDashboard } from "@/components/dashboard/DashboardContext";
 import { PostCard } from "@/components/posts/PostCard";
+import { PaletteSelect } from "@/components/brand/PaletteSelect";
+import type { BrandColors } from "@/lib/templates";
 import { TIPOS_POST } from "@/lib/posts";
 import { createClient } from "@/lib/supabase/client";
 import type { Post } from "@/lib/types";
@@ -20,6 +22,8 @@ export default function GeneradorPage() {
   const [cantidad, setCantidad] = useState(1);
   const [laminas, setLaminas] = useState(6);
   const [templateId, setTemplateId] = useState("auto");
+  const [paletteId, setPaletteId] = useState("kit");
+  const [palette, setPalette] = useState<BrandColors | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [results, setResults] = useState<Post[]>([]);
@@ -54,6 +58,7 @@ export default function GeneradorPage() {
           cantidad: Math.min(cantidad, maxCantidad),
           laminas,
           templateId: templateId === "auto" ? null : templateId,
+          palette: paletteId === "kit" ? null : palette,
         }),
       });
       const json = (await res.json().catch(() => ({}))) as { posts?: Post[]; error?: string };
@@ -144,6 +149,8 @@ export default function GeneradorPage() {
             </select>
           </div>
         </div>
+
+        <PaletteSelect value={paletteId} onChange={(id, c) => { setPaletteId(id); setPalette(c); }} />
 
         {error && <p className={errorCls}>{error}</p>}
 

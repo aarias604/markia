@@ -7,6 +7,8 @@ const PROVEEDORES = [
   ["Supabase", "Base de datos, cuentas y archivos (logos)", "Estados Unidos"],
   ["Vercel", "Alojamiento del sitio web", "Estados Unidos"],
   ["Anthropic", "Inteligencia artificial que redacta los textos (recibe tu nicho, tono e ideas, no tu contraseña ni datos de pago)", "Estados Unidos"],
+  ["ElevenLabs", "Voz de los videos: recibe solo el texto de la narración", "Estados Unidos"],
+  ["GitHub (Microsoft)", "Producción de los videos: recibe de forma temporal los textos de las escenas, tus colores, tu logo y la voz", "Estados Unidos"],
   ["Banco General · Yappy Comercial", "Procesamiento de pagos con Yappy", "Panamá"],
   ["Pagadito", "Procesamiento de pagos con tarjeta y renovación automática. Los datos de tu tarjeta los recibe solo Pagadito", "El Salvador / Centroamérica"],
   ["Lulubit", "Recepción de pagos con criptomonedas", "Panamá"],

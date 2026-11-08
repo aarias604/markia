@@ -35,8 +35,8 @@ export default function TerminosPage() {
       <h2>4. Planes, precios y forma de pago</h2>
       <ul>
         <li>
-          <strong>Plan Básico:</strong> 10 publicaciones y 1 carrusel con IA por ciclo, y 10 plantillas.{" "}
-          <strong>Plan PRO:</strong> 26 publicaciones y 3 carruseles con IA por ciclo, 20 plantillas y 5 plantillas
+          <strong>Plan Básico:</strong> 10 publicaciones, 1 carrusel y 1 video explicativo con IA por ciclo, y 10 plantillas.{" "}
+          <strong>Plan PRO:</strong> 26 publicaciones, 3 carruseles y 3 videos explicativos con IA por ciclo, 20 plantillas y 5 plantillas
           propias. La publicación automática en Instagram del Plan PRO está en desarrollo; mientras no esté disponible,
           puedes descargar cada publicación con su descripción sugerida. Los precios vigentes se muestran en la página de
           Planes antes de pagar.
@@ -99,6 +99,11 @@ export default function TerminosPage() {
       </p>
 
       <h2>7. Contenido generado con IA</h2>
+      <p>
+        <strong>Videos:</strong> la voz de los videos es sintética (generada con IA). Los cupos de videos no usados no se
+        acumulan de un ciclo a otro, salvo los comprados en la Tienda. Si un video no se puede crear por una falla técnica,
+        se devuelve el cupo. Los videos se guardan en tu cuenta y conviene que los descargues.
+      </p>
       <ul>
         <li>Los textos e imágenes los produce un sistema automático y pueden contener errores. Revisa todo antes de publicarlo; tú decides qué publicas y eres responsable de ello.</li>
         <li>No incluyas precios, promociones, testimonios o datos que no sean ciertos. La ley panameña de protección al consumidor prohíbe la publicidad engañosa.</li>
@@ -113,8 +118,8 @@ export default function TerminosPage() {
 
       <h2>9. Servicios adicionales</h2>
       <p>
-        Los add-ons de la Tienda (Boost de publicaciones, Pack de Plantillas y Generación de Marca con IA) son pagos
-        únicos.
+        Los add-ons de la Tienda (Boost de publicaciones, Pack de Plantillas, Paquete de videos y Generación de Marca con
+        IA) son pagos únicos. Las portadas para historias destacadas están incluidas en todos los planes.
       </p>
       <h3>Generación de Marca con IA</h3>
       <ul>

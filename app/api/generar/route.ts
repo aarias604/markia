@@ -81,6 +81,18 @@ export async function POST(request: Request) {
   const cantidad = isCarousel ? 1 : Math.min(Math.max(Math.floor(Number(body.cantidad) || 1), 1), MAX_POR_VEZ);
   const laminas = Math.min(Math.max(Math.floor(Number(body.laminas) || 6), 4), 8);
   const templateId = typeof body.templateId === "string" && body.templateId ? body.templateId : null;
+  // Paleta elegida antes de generar (si no viene, se usa la del kit de marca).
+  const rawPalette = (body as { palette?: Record<string, unknown> | null }).palette;
+  const HEX = /^#[0-9A-Fa-f]{6}$/;
+  const palette =
+    rawPalette && ["color_primary", "color_secondary", "color_accent", "color_cream"].every((k) => typeof rawPalette[k] === "string" && HEX.test(rawPalette[k] as string))
+      ? {
+          color_primary: rawPalette.color_primary as string,
+          color_secondary: rawPalette.color_secondary as string,
+          color_accent: rawPalette.color_accent as string,
+          color_cream: rawPalette.color_cream as string,
+        }
+      : null;
   const admin = createAdminClient();
 
   // 1. Estado de la cuenta y cupo
@@ -198,6 +210,7 @@ export async function POST(request: Request) {
     post_type: tipo.id,
     format: isCarousel ? "carousel" : "single",
     slides: isCarousel ? p.slides : null,
+    palette,
     status: "draft",
   }));
   const { data: inserted, error: insErr } = await supabase.from("posts").insert(rows).select("*");

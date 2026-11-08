@@ -10,6 +10,7 @@ export interface PublicPlan {
   ends_on: string | null;
   monthly_posts: number;
   monthly_carousels: number | null;
+  monthly_videos?: number | null;
   generic_templates: number;
   custom_templates: number;
   instagram_autopost: boolean;
@@ -34,10 +35,12 @@ export function planFeatures(p: PublicPlan) {
   const list = [
     `${p.monthly_posts} publicaciones con IA al mes`,
     `${carruseles} carrusel${carruseles === 1 ? "" : "es"} con IA al mes`,
+    ...(p.monthly_videos ? [`${p.monthly_videos} video${p.monthly_videos === 1 ? "" : "s"} explicativo${p.monthly_videos === 1 ? "" : "s"} animado${p.monthly_videos === 1 ? "" : "s"} al mes (1–2 min, con voz)`] : []),
     `${p.generic_templates} plantillas de diseño`,
     "Descripción sugerida y hashtags en cada publicación",
     "Calendario de contenido y recordatorios por correo",
     "Descarga de imágenes en PNG",
+    "Portadas para historias destacadas con tus colores",
   ];
   if (p.custom_templates > 0) list.push(`${p.custom_templates} plantillas personalizadas propias`);
   if (p.instagram_autopost) list.push("Publicación automática en Instagram (próximamente)");

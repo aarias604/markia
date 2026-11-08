@@ -1,6 +1,7 @@
 "use client";
 
 import { BrandKitForm } from "@/components/brand/BrandKitForm";
+import { PaletteManager } from "@/components/brand/PaletteManager";
 import { useDashboard } from "@/components/dashboard/DashboardContext";
 
 export default function MarcaPage() {
@@ -17,6 +18,7 @@ export default function MarcaPage() {
         initialLogoUrl={logoDataUrl}
         onSaved={refresh}
       />
+      <PaletteManager />
     </div>
   );
 }

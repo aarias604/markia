@@ -95,6 +95,8 @@ export interface Post {
   post_type: string | null;
   format?: "single" | "carousel";
   slides?: Slide[] | null;
+  /** Colores con los que se generó (null = paleta del kit). */
+  palette?: Pick<BrandKit, "color_primary" | "color_secondary" | "color_accent" | "color_cream"> | null;
   placement?: "feed" | "story";
   source?: "ai" | "upload";
   media_paths?: string[] | null;

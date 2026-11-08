@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { LayoutTemplate, Palette, Zap } from "lucide-react";
+import { Clapperboard, LayoutTemplate, Palette, Zap } from "lucide-react";
 import { useDashboard } from "@/components/dashboard/DashboardContext";
 import { CardReturnNotice } from "@/components/billing/CardReturnNotice";
 import { YappyCheckout } from "@/components/billing/YappyCheckout";
@@ -22,6 +22,12 @@ const INFO: Record<string, { icon: typeof Zap; text: string; needsPlan: boolean;
     text: "Suma 5 publicaciones con IA a tu cupo. No vencen con el ciclo: se usan cuando se acabe tu cupo mensual.",
     needsPlan: true,
     after: "Se sumaron 5 publicaciones a tu cupo.",
+  },
+  video_pack_3: {
+    icon: Clapperboard,
+    text: "Suma 3 videos explicativos animados (1–2 minutos, con voz, efectos y tus colores). No vencen: se usan cuando se acaben los de tu plan.",
+    needsPlan: true,
+    after: "Se sumaron 3 videos. Entra a «Videos» para crearlos.",
   },
   template_pack: {
     icon: LayoutTemplate,

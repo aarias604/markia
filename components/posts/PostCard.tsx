@@ -8,6 +8,7 @@ import { useRef, useState } from "react";
 import { CalendarClock, Check, CircleDashed, Copy, Download, ExternalLink, Layers, Loader2, Send, Trash2, Zap } from "lucide-react";
 import { PostImage } from "@/components/posts/PostImage";
 import { useDashboard } from "@/components/dashboard/DashboardContext";
+import { asColors } from "@/lib/palettes";
 import { downloadSvgAsPng, downloadText, slugify, wait } from "@/lib/download";
 import { downloadUrl, svgToJpeg, uploadPostMedia, useSignedUrls, type Placement } from "@/lib/media";
 import { STATUS_INFO, toLocalInputValue } from "@/lib/posts";
@@ -23,7 +24,9 @@ interface Props {
 }
 
 export function PostCard({ post, onUpdated, onDeleted }: Props) {
-  const { kit, logoDataUrl, templates, businessName, userId, planHasAutopost, canAutopost, instagram } = useDashboard();
+  const { kit: kitColors, logoDataUrl, templates, businessName, userId, planHasAutopost, canAutopost, instagram } = useDashboard();
+  // Colores de la publicación: la paleta elegida al generarla o la del kit de marca.
+  const kit = asColors(post.palette) ?? kitColors;
   const isUpload = post.source === "upload";
   const isCarousel = !isUpload && post.format === "carousel" && Array.isArray(post.slides) && post.slides.length > 0;
   const svgRefs = useRef<(SVGSVGElement | null)[]>([]);
