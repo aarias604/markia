@@ -98,12 +98,14 @@ export interface Post {
   /** Colores con los que se generó (null = paleta del kit). */
   palette?: Pick<BrandKit, "color_primary" | "color_secondary" | "color_accent" | "color_cream"> | null;
   placement?: "feed" | "story";
-  source?: "ai" | "upload";
+  source?: "ai" | "upload" | "video";
   media_paths?: string[] | null;
   auto_publish?: boolean;
   published_at?: string | null;
   ig_permalink?: string | null;
   also_facebook?: boolean;
+  video_id?: string | null;
+  video_path?: string | null;
   fb_permalink?: string | null;
   fb_error?: string | null;
   error_message?: string | null;

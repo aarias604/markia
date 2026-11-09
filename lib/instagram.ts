@@ -229,8 +229,8 @@ async function createContainer(t: Target, params: Record<string, string>) {
   return String(json.id);
 }
 
-async function waitReady(t: Target, containerId: string) {
-  for (let i = 0; i < 8; i++) {
+async function waitReady(t: Target, containerId: string, tries = 8) {
+  for (let i = 0; i < tries; i++) {
     const json = await getJson(`${base(t)}/${containerId}?${q({ fields: "status_code", access_token: t.token })}`);
     const status = String(json.status_code ?? "FINISHED");
     if (status === "FINISHED" || status === "PUBLISHED") return;
@@ -287,6 +287,15 @@ export async function igPublish(opts: Target & { placement: "feed" | "story"; im
     creationId = await createContainer(t, { media_type: "CAROUSEL", children: children.join(","), caption });
   }
   await waitReady(t, creationId);
+  const mediaId = await publishContainer(t, creationId);
+  return { mediaId, permalink: await permalink(t, mediaId) };
+}
+
+/** Publica un video como Reel (también aparece en el feed). Instagram puede tardar 1 a 3 minutos en procesarlo. */
+export async function igPublishReel(opts: Target & { videoUrl: string; caption: string }) {
+  const t: Target = { mode: opts.mode, igUserId: opts.igUserId, token: opts.token };
+  const creationId = await createContainer(t, { media_type: "REELS", video_url: opts.videoUrl, caption: opts.caption, share_to_feed: "true" });
+  await waitReady(t, creationId, 40); // hasta ~3 min y 20 s
   const mediaId = await publishContainer(t, creationId);
   return { mediaId, permalink: await permalink(t, mediaId) };
 }

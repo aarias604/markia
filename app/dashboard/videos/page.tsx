@@ -5,9 +5,11 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Player, type PlayerRef } from "@remotion/player";
 import {
-  ArrowDown, ArrowUp, Clapperboard, Copy, Download, Eye, Loader2, Plus, RefreshCw, Sparkles, Trash2, Wand2,
+  ArrowDown, ArrowUp, CalendarClock, Clapperboard, Copy, Download, Eye, Loader2, Plus, RefreshCw, Sparkles, Trash2, Wand2,
 } from "lucide-react";
 import { PaletteSelect } from "@/components/brand/PaletteSelect";
+import { VideoPostCard } from "@/components/posts/VideoPostCard";
+import type { Post } from "@/lib/types";
 import { useDashboard } from "@/components/dashboard/DashboardContext";
 import { DEFAULT_KIT } from "@/lib/brand";
 import { ICON_NAMES } from "@/lib/icons";
@@ -69,6 +71,7 @@ export default function VideosPage() {
   const [progress, setProgress] = useState<string | null>(null);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [handle, setHandle] = useState("");
+  const [scheduling, setScheduling] = useState<Post | null>(null);
   const playerRef = useRef<PlayerRef>(null);
 
   const load = useCallback(async () => {
@@ -183,6 +186,28 @@ export default function VideosPage() {
     }
   }
 
+  /** Crea la publicación del video para programarla (Reel en Instagram y video en Facebook). */
+  async function scheduleVideo(v: Video) {
+    setBusy(`s-${v.id}`);
+    setMsg(null);
+    const sb = createClient();
+    const { data: existing } = await sb.from("posts").select("*").eq("video_id", v.id).neq("status", "published").maybeSingle();
+    const { data, error } = existing
+      ? { data: existing, error: null }
+      : await sb
+          .from("posts")
+          .insert({
+            user_id: userId, source: "video", video_id: v.id, video_path: `${userId}/${v.id}/video.mp4`,
+            title: v.title, caption: v.caption ?? "", hashtags: v.hashtags ?? [], placement: "feed", format: "single", status: "draft",
+          })
+          .select("*")
+          .single();
+    setBusy(null);
+    if (error || !data) return setMsg({ ok: false, text: error?.message ?? "No se pudo preparar la publicación." });
+    setScheduling(data as Post);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
   async function remove(v: Video) {
     setBusy(v.id);
     const sb = createClient();
@@ -233,6 +258,20 @@ export default function VideosPage() {
       </div>
 
       {msg && <p className={msg.ok ? successCls : errorCls}>{msg.text}</p>}
+
+      {scheduling && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold">Programar publicación</h2>
+            <span className="flex gap-2">
+              <Link href="/dashboard/calendario" className={btnSecondary}>Ver calendario</Link>
+              <button className={btnSecondary} onClick={() => setScheduling(null)}>Cerrar</button>
+            </span>
+          </div>
+          <VideoPostCard post={scheduling} onUpdated={(p) => { setScheduling(p); if (p.status === "scheduled") setMsg({ ok: true, text: "Video programado. Lo verás en tu calendario." }); }}
+            onDeleted={() => setScheduling(null)} />
+        </div>
+      )}
 
       {/* Paso 1: idea o narración */}
       {!editing && (
@@ -517,6 +556,11 @@ export default function VideosPage() {
                 <div className="flex flex-wrap gap-2">
                   {v.status === "ready" && urls[v.id] && (
                     <a href={urls[v.id].download} className={btnGold}><Download className="h-4 w-4" /> Descargar MP4</a>
+                  )}
+                  {v.status === "ready" && (
+                    <button className={btnSecondary} onClick={() => void scheduleVideo(v)} disabled={busy === `s-${v.id}`}>
+                      {busy === `s-${v.id}` ? <Loader2 className="h-4 w-4 animate-spin" /> : <CalendarClock className="h-4 w-4" />} Programar
+                    </button>
                   )}
                   {(v.status === "draft" || v.status === "failed") && (
                     <button className={btnSecondary} onClick={() => edit(v)}>

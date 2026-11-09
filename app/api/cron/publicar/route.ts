@@ -1,13 +1,15 @@
 // GET /api/cron/publicar · Vercel Cron cada 5 minutos (ver vercel.json).
 // Publica en Instagram las publicaciones programadas con "publicar automáticamente".
 import { NextResponse, type NextRequest } from "next/server";
-import { fbPublish } from "@/lib/facebook";
-import { igPublish } from "@/lib/instagram";
+import { fbPublish, fbPublishVideo } from "@/lib/facebook";
+import { igPublish, igPublishReel } from "@/lib/instagram";
 import { layout, publishReminderEmail, sendOnce, siteUrl, userEmail, type ReminderPost } from "@/lib/notifications";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { WA_TEMPLATES, sendWhatsAppOnce, waParam, waPhone, whatsappConfigured } from "@/lib/whatsapp";
 
 const MAX_POR_VUELTA = 5;
+// Los Reels pueden tardar varios minutos en procesarse: damos tiempo a la función.
+export const maxDuration = 300;
 const MAX_INTENTOS = 3;
 
 interface DuePost {
@@ -20,6 +22,8 @@ interface DuePost {
   media_paths: string[] | null;
   publish_attempts: number;
   also_facebook: boolean;
+  source: string;
+  video_path: string | null;
 }
 
 export async function GET(request: NextRequest) {
@@ -31,7 +35,7 @@ export async function GET(request: NextRequest) {
   const admin = createAdminClient();
   const { data: due, error } = await admin
     .from("posts")
-    .select("id, user_id, title, caption, hashtags, placement, media_paths, publish_attempts, also_facebook")
+    .select("id, user_id, title, caption, hashtags, placement, media_paths, publish_attempts, also_facebook, source, video_path")
     .eq("auto_publish", true)
     .eq("status", "scheduled")
     .lte("scheduled_at", new Date().toISOString())
@@ -42,7 +46,10 @@ export async function GET(request: NextRequest) {
 
   const results: { id: string; ok: boolean; error?: string }[] = [];
 
+  const started = Date.now();
   for (const post of (due ?? []) as DuePost[]) {
+    // Si ya usamos más de 2 minutos (p. ej. un Reel), dejamos el resto para la próxima vuelta.
+    if (Date.now() - started > 120000) break;
     // Bloqueo: solo una ejecución toma cada publicación.
     const { data: claimed } = await admin
       .from("posts")
@@ -66,13 +73,38 @@ export async function GET(request: NextRequest) {
       if (!account) throw new Error("Tu cuenta de Instagram no está conectada.");
       if (new Date(account.token_expires_at) < new Date()) throw new Error("La conexión con Instagram venció. Vuelve a conectarla.");
 
+      const caption = [post.caption ?? "", (post.hashtags ?? []).join(" ")].filter(Boolean).join("\n\n").slice(0, 2200);
+
+      // Videos: Reel en Instagram y video en la Página de Facebook.
+      if (post.source === "video") {
+        if (!post.video_path) throw new Error("La publicación no tiene imágenes preparadas: falta el video.");
+        const { data: v } = await admin.storage.from("videos").createSignedUrl(post.video_path, 7200);
+        if (!v?.signedUrl) throw new Error("No se pudo preparar el video.");
+        const { mediaId, permalink } = await igPublishReel({
+          mode: account.api_mode, igUserId: account.ig_user_id, token: account.access_token, videoUrl: v.signedUrl, caption,
+        });
+        await admin
+          .from("posts")
+          .update({ status: "published", published_at: new Date().toISOString(), instagram_media_id: mediaId, ig_permalink: permalink, error_message: null })
+          .eq("id", post.id);
+        if (post.also_facebook) {
+          try {
+            if (!account.fb_page_id || !account.fb_page_token) throw new Error("No hay una Página de Facebook conectada. Vuelve a conectar tu cuenta.");
+            const fb = await fbPublishVideo({ pageId: account.fb_page_id, token: account.fb_page_token, videoUrl: v.signedUrl, caption, title: post.title ?? undefined });
+            await admin.from("posts").update({ fb_post_id: fb.postId, fb_permalink: fb.permalink, fb_error: null }).eq("id", post.id);
+          } catch (fbErr) {
+            await admin.from("posts").update({ fb_error: (fbErr instanceof Error ? fbErr.message : "Error en Facebook").slice(0, 300) }).eq("id", post.id);
+          }
+        }
+        results.push({ id: post.id, ok: true });
+        continue;
+      }
+
       const paths = post.media_paths ?? [];
       if (paths.length === 0) throw new Error("La publicación no tiene imágenes preparadas. Vuelve a programarla.");
       const { data: signed, error: signErr } = await admin.storage.from("post-media").createSignedUrls(paths, 3600);
       if (signErr || !signed) throw new Error("No se pudieron preparar las imágenes.");
       const urls = signed.map((s) => s.signedUrl).filter(Boolean) as string[];
-
-      const caption = [post.caption ?? "", (post.hashtags ?? []).join(" ")].filter(Boolean).join("\n\n").slice(0, 2200);
       const { mediaId, permalink } = await igPublish({
         mode: account.api_mode,
         igUserId: account.ig_user_id,

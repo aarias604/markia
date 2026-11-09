@@ -81,3 +81,12 @@ export async function fbPublish(opts: { pageId: string; token: string; placement
   const postId = String(r.id);
   return { postId, permalink: await permalink(postId, token) };
 }
+
+/** Publica un video en la Página (Facebook lo procesa en segundo plano). */
+export async function fbPublishVideo(opts: { pageId: string; token: string; videoUrl: string; caption: string; title?: string }) {
+  const r = await call(`${opts.pageId}/videos`, {
+    file_url: opts.videoUrl, description: opts.caption, ...(opts.title ? { title: opts.title.slice(0, 100) } : {}), access_token: opts.token,
+  }, "POST");
+  const id = String(r.id);
+  return { postId: id, permalink: `https://www.facebook.com/${opts.pageId}/videos/${id}` };
+}

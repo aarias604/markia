@@ -8,6 +8,7 @@ import { useRef, useState } from "react";
 import { CalendarClock, Check, CircleDashed, Copy, Download, ExternalLink, Layers, Loader2, Send, Trash2, Zap } from "lucide-react";
 import { PostImage } from "@/components/posts/PostImage";
 import { useDashboard } from "@/components/dashboard/DashboardContext";
+import { VideoPostCard } from "@/components/posts/VideoPostCard";
 import { asColors } from "@/lib/palettes";
 import { downloadSvgAsPng, downloadText, slugify, wait } from "@/lib/download";
 import { downloadUrl, svgToJpeg, uploadPostMedia, useSignedUrls, type Placement } from "@/lib/media";
@@ -23,7 +24,12 @@ interface Props {
   onDeleted?: (id: string) => void;
 }
 
-export function PostCard({ post, onUpdated, onDeleted }: Props) {
+/** Las publicaciones de video usan su propia tarjeta. */
+export function PostCard(props: Props) {
+  return props.post.source === "video" ? <VideoPostCard {...props} /> : <ImagePostCard {...props} />;
+}
+
+function ImagePostCard({ post, onUpdated, onDeleted }: Props) {
   const { kit: kitColors, logoDataUrl, templates, businessName, userId, planHasAutopost, canAutopost, instagram } = useDashboard();
   // Colores de la publicación: la paleta elegida al generarla o la del kit de marca.
   const kit = asColors(post.palette) ?? kitColors;
