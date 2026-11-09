@@ -1,5 +1,5 @@
 // Datos que recibe la composición de Remotion (los mismos para la vista previa y el render).
-import type { Scene } from "../lib/video";
+import type { Scene, VideoStyle } from "../lib/video";
 import type { Timing, Word } from "../lib/video-timing";
 
 export type Colors = {
@@ -11,6 +11,7 @@ export type Colors = {
 
 export type VideoProps = {
   scenes: Scene[];
+  style: VideoStyle;
   colors: Colors;
   brandName: string;
   handle: string;

@@ -9,6 +9,9 @@ import { AnimatePresence, motion } from "framer-motion";
 import { CheckCircle2, Clock, Loader2, Smartphone, X } from "lucide-react";
 import { useDashboard } from "@/components/dashboard/DashboardContext";
 import { CardPay } from "@/components/billing/CardPay";
+
+/** El pago con tarjeta (Pagadito) se activa con NEXT_PUBLIC_PAGADITO_ENABLED=true en Vercel. */
+const CARD_ENABLED = process.env.NEXT_PUBLIC_PAGADITO_ENABLED === "true";
 import { CryptoPay } from "@/components/billing/CryptoPay";
 import { errorCls, inputCls, labelCls } from "@/lib/ui";
 
@@ -192,12 +195,15 @@ export function YappyCheckout({ open, onClose, title, description, amountLabel, 
 
             {stage === "ready" && (
               <div className="mt-5 grid grid-cols-3 gap-1 rounded-full bg-[#4A154B]/5 p-1 text-sm font-semibold">
-                {(["yappy", "card", "crypto"] as const).map((m) => (
-                  <button key={m} onClick={() => setMethod(m)}
-                    className={`rounded-full py-2 transition ${method === m ? "bg-white shadow" : "text-[#4A154B]/60"}`}>
-                    {m === "yappy" ? "Yappy" : m === "card" ? "Tarjeta" : "USDT"}
-                  </button>
-                ))}
+                {(["yappy", "card", "crypto"] as const).map((m) => {
+                  const soon = m === "card" && !CARD_ENABLED;
+                  return (
+                    <button key={m} onClick={() => !soon && setMethod(m)} disabled={soon} title={soon ? "Pago con tarjeta: próximamente" : undefined}
+                      className={`rounded-full py-2 transition ${method === m ? "bg-white shadow" : "text-[#4A154B]/60"} ${soon ? "cursor-not-allowed opacity-60" : ""}`}>
+                      {m === "yappy" ? "Yappy" : m === "card" ? (soon ? "Tarjeta · pronto" : "Tarjeta") : "USDT"}
+                    </button>
+                  );
+                })}
               </div>
             )}
 

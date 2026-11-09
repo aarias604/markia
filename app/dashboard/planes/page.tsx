@@ -36,7 +36,7 @@ export default function PlanesPage() {
   return (
     <div>
       <h1 className="text-2xl font-bold">Planes</h1>
-      <p className="mb-8 mt-1 text-[#4A154B]/70">Paga con Yappy, tarjeta o cripto. Con tarjeta puedes activar la renovación automática. Sin contratos.</p>
+      <p className="mb-8 mt-1 text-[#4A154B]/70">Paga con Yappy o cripto (USDT). Pago con tarjeta y renovación automática: próximamente. Sin contratos.</p>
 
       <CardReturnNotice />
       <AutopayCard />

@@ -15,7 +15,7 @@ import { asColors, pickColors } from "@/lib/palettes";
 import { createClient } from "@/lib/supabase/client";
 import type { BrandColors } from "@/lib/templates";
 import { btnGold, btnSecondary, cardCls, errorCls, inputCls, labelCls, successCls } from "@/lib/ui";
-import { DURATIONS, LAYOUTS, VIDEO_H, VIDEO_W, type Scene, type SceneLayout } from "@/lib/video";
+import { DURATIONS, LAYOUTS, STYLES, VIDEO_H, VIDEO_W, type Scene, type SceneLayout, type VideoStyle } from "@/lib/video";
 import { FPS, estimateTimings } from "@/lib/video-timing";
 import { MarkiaVideo } from "@/remotion/MarkiaVideo";
 import type { VideoProps } from "@/remotion/types";
@@ -30,6 +30,8 @@ interface Video {
   voice: "female" | "male";
   palette: BrandColors | null;
   scenes: Scene[];
+  style?: VideoStyle;
+  ai_images?: boolean;
   duration_s: number | null;
   error: string | null;
   created_at: string;
@@ -58,6 +60,8 @@ export default function VideosPage() {
   const [paletteId, setPaletteId] = useState("kit");
   const [colors, setColors] = useState<BrandColors>(pickColors(kit ?? DEFAULT_KIT));
   const [subtitles, setSubtitles] = useState(true);
+  const [style, setStyle] = useState<VideoStyle>("pop");
+  const [aiImages, setAiImages] = useState(false);
 
   // Editor
   const [editing, setEditing] = useState<Video | null>(null);
@@ -112,7 +116,7 @@ export default function VideosPage() {
       const res = await fetch("/api/video/guion", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mode, text, seconds, voice, palette: paletteId === "kit" ? null : colors }),
+        body: JSON.stringify({ mode, text, seconds, voice, palette: paletteId === "kit" ? null : colors, style, aiImages }),
       });
       const json = (await res.json().catch(() => ({}))) as { video?: Video; error?: string };
       if (!res.ok || !json.video) throw new Error(json.error ?? "No se pudo crear el guion.");
@@ -129,6 +133,8 @@ export default function VideosPage() {
   function edit(v: Video) {
     setEditing(v);
     setVoice(v.voice);
+    setStyle(v.style ?? "pop");
+    setAiImages(!!v.ai_images);
     const c = asColors(v.palette);
     if (c) {
       setColors(c);
@@ -162,7 +168,7 @@ export default function VideosPage() {
       const res = await fetch("/api/video/render", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ videoId: editing.id, scenes, voice, palette: paletteId === "kit" ? null : colors, subtitles, handle }),
+        body: JSON.stringify({ videoId: editing.id, scenes, voice, palette: paletteId === "kit" ? null : colors, subtitles, handle, style, aiImages }),
       });
       const json = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) throw new Error(json.error ?? "No se pudo crear el video.");
@@ -194,10 +200,10 @@ export default function VideosPage() {
     if (!scenes.length) return null;
     const t = estimateTimings(scenes);
     return {
-      scenes, colors, brandName: businessName, handle: handle || defaultHandleFor(businessName), logoUrl: logoDataUrl,
+      scenes, style, colors, brandName: businessName, handle: handle || defaultHandleFor(businessName), logoUrl: logoDataUrl,
       voiceUrl: null, words: t.words, timings: t.timings, total: t.total, musicUrl: null, sfx: null, subtitles,
     };
-  }, [editing, colors, businessName, handle, logoDataUrl, subtitles]);
+  }, [editing, colors, businessName, handle, logoDataUrl, subtitles, style]);
 
   function seekScene(i: number) {
     if (!preview) return;
@@ -272,6 +278,25 @@ export default function VideosPage() {
             </label>
           </div>
           <PaletteSelect value={paletteId} onChange={(id, c) => { setPaletteId(id); setColors(c); }} />
+          <div>
+            <label className={labelCls}>Estilo de animación</label>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {STYLES.map((st) => (
+                <button key={st.id} type="button" onClick={() => setStyle(st.id)}
+                  className={`rounded-xl border p-3 text-left transition ${style === st.id ? "border-[#4A154B] bg-white shadow" : "border-[#4A154B]/15 bg-white/60 hover:border-[#4A154B]/40"}`}>
+                  <span className="block text-sm font-bold">{st.label}</span>
+                  <span className="block text-xs text-[#4A154B]/60">{st.hint}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+          <label className="flex items-start gap-2 text-sm">
+            <input type="checkbox" className="mt-0.5 h-4 w-4 accent-[#4A154B]" checked={aiImages} onChange={(e) => setAiImages(e.target.checked)} />
+            <span>
+              <strong>Imágenes con IA</strong> según lo que dice la voz, con tus colores.
+              <span className="block text-xs text-[#4A154B]/60">Si no lo marcas, cada escena se ilustra con íconos animados. La vista previa siempre muestra los íconos.</span>
+            </span>
+          </label>
           {left > 0 ? (
             <button className={btnGold} onClick={createScript} disabled={busy === "guion" || text.trim().length < 5}>
               {busy === "guion" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
@@ -299,6 +324,25 @@ export default function VideosPage() {
           </div>
           <div className={`${cardCls} space-y-4`}>
             <PaletteSelect value={paletteId} onChange={(id, c) => { setPaletteId(id); setColors(c); }} />
+          <div>
+            <label className={labelCls}>Estilo de animación</label>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {STYLES.map((st) => (
+                <button key={st.id} type="button" onClick={() => setStyle(st.id)}
+                  className={`rounded-xl border p-3 text-left transition ${style === st.id ? "border-[#4A154B] bg-white shadow" : "border-[#4A154B]/15 bg-white/60 hover:border-[#4A154B]/40"}`}>
+                  <span className="block text-sm font-bold">{st.label}</span>
+                  <span className="block text-xs text-[#4A154B]/60">{st.hint}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+          <label className="flex items-start gap-2 text-sm">
+            <input type="checkbox" className="mt-0.5 h-4 w-4 accent-[#4A154B]" checked={aiImages} onChange={(e) => setAiImages(e.target.checked)} />
+            <span>
+              <strong>Imágenes con IA</strong> según lo que dice la voz, con tus colores.
+              <span className="block text-xs text-[#4A154B]/60">Si no lo marcas, cada escena se ilustra con íconos animados. La vista previa siempre muestra los íconos.</span>
+            </span>
+          </label>
             <div className="flex flex-wrap gap-6">
               <div>
                 <label className={labelCls}>Voz</label>
@@ -340,9 +384,6 @@ export default function VideosPage() {
                   <select className={`${inputCls} w-auto py-1.5`} value={s.layout} onChange={(e) => setScene(i, { layout: e.target.value as SceneLayout })}>
                     {LAYOUTS.map((l) => <option key={l.id} value={l.id}>{l.label}</option>)}
                   </select>
-                  <select className={`${inputCls} w-auto py-1.5`} value={s.icono} onChange={(e) => setScene(i, { icono: e.target.value })}>
-                    {ICON_NAMES.map((n) => <option key={n} value={n}>{n.replace(/_/g, " ")}</option>)}
-                  </select>
                   <select className={`${inputCls} w-auto py-1.5`} value={s.sfx ?? "whoosh"} onChange={(e) => setScene(i, { sfx: e.target.value as Scene["sfx"] })}>
                     <option value="whoosh">Sonido: swoosh</option>
                     <option value="pop">Sonido: pop</option>
@@ -355,6 +396,26 @@ export default function VideosPage() {
                     <button className={`${btnSecondary} text-red-700`} disabled={editing.scenes.length <= 2}
                       onClick={() => setEditing({ ...editing, scenes: editing.scenes.filter((_, j) => j !== i) })}><Trash2 className="h-4 w-4" /></button>
                   </span>
+                </div>
+                <div>
+                  <label className={labelCls}>Ilustración (íconos según lo que dice la voz)</label>
+                  <div className="flex flex-wrap gap-2">
+                    {[0, 1, 2, 3].map((k) => {
+                      const list = s.ilustracion?.length ? s.ilustracion : [s.icono];
+                      return (
+                        <select key={k} className={`${inputCls} w-auto py-1.5`} value={list[k] ?? ""}
+                          onChange={(e) => {
+                            const next = [...list];
+                            next[k] = e.target.value;
+                            const clean = next.filter(Boolean);
+                            setScene(i, { ilustracion: clean, icono: clean[0] ?? s.icono });
+                          }}>
+                          <option value="">{k === 0 ? "— principal —" : "— ninguno —"}</option>
+                          {ICON_NAMES.map((n) => <option key={n} value={n}>{n.replace(/_/g, " ")}</option>)}
+                        </select>
+                      );
+                    })}
+                  </div>
                 </div>
                 <div>
                   <label className={labelCls}>Narración (voz)</label>

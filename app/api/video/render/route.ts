@@ -1,4 +1,6 @@
 // POST /api/video/render · Descuenta el cupo, crea la voz con ElevenLabs y manda a renderizar con Remotion (GitHub Actions).
+export const maxDuration = 300; // voz + imágenes pueden tardar más de un minuto
+
 import { NextResponse } from "next/server";
 import { elevenConfigured, textToSpeech } from "@/lib/elevenlabs";
 import { ICON_NAMES } from "@/lib/icons";
@@ -6,7 +8,8 @@ import { siteUrl } from "@/lib/notifications";
 import { remotionConfigured, startRender } from "@/lib/remotion-render";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { cleanScenes } from "@/lib/video";
+import { addAiImages, aiImagesConfigured } from "@/lib/ai-images";
+import { cleanScenes, isStyle } from "@/lib/video";
 import { alignTimings, narrationParts } from "@/lib/video-timing";
 import { VIDEO_BUCKET } from "@/lib/video-server";
 import type { Colors, VideoProps } from "@/remotion/types";
@@ -34,6 +37,7 @@ export async function POST(request: Request) {
 
   const body = (await request.json().catch(() => null)) as {
     videoId?: string; scenes?: unknown; palette?: unknown; voice?: string; subtitles?: boolean; handle?: string;
+    style?: string; aiImages?: boolean;
   } | null;
   if (!body?.videoId) return fail("Solicitud inválida.");
 
@@ -47,6 +51,8 @@ export async function POST(request: Request) {
   const { text } = narrationParts(scenes);
   if (text.length > 4500) return fail("La narración es muy larga: el máximo es de unos 2 minutos.");
   const voice = body.voice === "male" ? "male" : "female";
+  const style = isStyle(body.style) ? body.style : isStyle(video.style) ? video.style : "pop";
+  const aiImages = (body.aiImages ?? video.ai_images) === true;
   const palette = validColors(body.palette);
 
   const [{ data: kit }, { data: profile }] = await Promise.all([
@@ -57,7 +63,7 @@ export async function POST(request: Request) {
   const brandName = profile?.business_name || "Mi marca";
   const handle = (body.handle ?? "").replace(/[^A-Za-z0-9._]/g, "").slice(0, 30) || brandName.toLowerCase().replace(/[^a-z0-9]+/g, "").slice(0, 30) || "mimarca";
 
-  await admin.from("videos").update({ scenes, palette, voice, updated_at: new Date().toISOString() }).eq("id", video.id);
+  await admin.from("videos").update({ scenes, palette, voice, style, ai_images: aiImages, updated_at: new Date().toISOString() }).eq("id", video.id);
 
   // 1. Cupo
   const { data: q, error: qErr } = await admin.rpc("consume_video_quota", { p_video_id: video.id }).single();
@@ -90,9 +96,16 @@ export async function POST(request: Request) {
       }
     }
 
+    // Imágenes con IA (opcional): si falla alguna, esa escena usa su ilustración de íconos.
+    let finalScenes = scenes;
+    if (aiImages && aiImagesConfigured()) {
+      finalScenes = (await addAiImages(admin, folder, scenes, style, colors)).scenes;
+    }
+
     const t = alignTimings(scenes, alignment);
     const props: VideoProps = {
-      scenes,
+      scenes: finalScenes,
+      style,
       colors,
       brandName,
       handle,

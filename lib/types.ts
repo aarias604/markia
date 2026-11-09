@@ -103,6 +103,9 @@ export interface Post {
   auto_publish?: boolean;
   published_at?: string | null;
   ig_permalink?: string | null;
+  also_facebook?: boolean;
+  fb_permalink?: string | null;
+  fb_error?: string | null;
   error_message?: string | null;
   scheduled_at: string | null;
   status: PostStatus;

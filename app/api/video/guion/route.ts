@@ -1,12 +1,14 @@
 // POST /api/video/guion · Crea el guion y las escenas de un video (no descuenta cupo).
 // mode "idea": la IA escribe la narración a partir de una idea.
 // mode "narration": el cliente trae su narración; la IA solo la divide en escenas y diseña lo visual.
+export const maxDuration = 300; // voz + imágenes pueden tardar más de un minuto
+
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
 import { ICON_NAMES } from "@/lib/icons";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { DURATIONS, cleanScenes, type Scene } from "@/lib/video";
+import { DURATIONS, cleanScenes, isStyle, type Scene } from "@/lib/video";
 
 const MODEL = "claude-sonnet-5-5";
 const MAX_BORRADORES_POR_DIA = 10;
@@ -42,7 +44,10 @@ export async function POST(request: Request) {
 
   const body = (await request.json().catch(() => null)) as {
     mode?: string; text?: string; seconds?: number; voice?: string; palette?: Record<string, unknown> | null;
+    style?: string; aiImages?: boolean;
   } | null;
+  const style = isStyle(body?.style) ? body.style : "pop";
+  const aiImages = body?.aiImages === true;
   const mode = body?.mode === "narration" ? "narration" : "idea";
   const text = (body?.text ?? "").trim().slice(0, mode === "narration" ? 3200 : 800);
   const dur = DURATIONS.find((d) => d.seconds === Number(body?.seconds)) ?? DURATIONS[1];
@@ -79,17 +84,19 @@ export async function POST(request: Request) {
   const system = [
     `Eres guionista de videos explicativos animados para Instagram (Reels) de "${negocio}", negocio de ${kit?.niche ?? "su sector"} en Panamá.`,
     `Tono de la marca: ${kit?.voice_tone ?? "cercano y profesional"}. Español latinoamericano natural, frases cortas, fácil de escuchar.`,
-    "El video es de gráficos y texto animado (sin fotos): cada escena tiene un diseño (layout), un ícono y textos breves en pantalla.",
+    "El video es de gráficos y texto animado: cada escena tiene un diseño (layout), una ilustración hecha con 1 a 4 íconos que representan LITERALMENTE lo que dice la voz en esa escena, y textos breves en pantalla.",
+    "Elige los íconos de la ilustración pensando en las palabras concretas de la narración (ej.: «vender por WhatsApp desde el celular» → mensaje, celular, dinero). El primero es el principal.",
     "Nunca inventes precios, direcciones, teléfonos, premios, estadísticas exactas ni testimonios. Si das un dato, que sea general y verdadero, o usa marcadores como [precio].",
     "Responde SOLO con JSON válido, sin texto antes ni después.",
   ].join("\n");
 
   const schema = [
     'Formato exacto: {"titulo":"nombre interno, máx. 6 palabras","caption":"descripción para publicar, 50 a 120 palabras, con llamada a la acción","hashtags":["#ejemplo"],"escenas":[',
-    '{"layout":"portada|icono|lista|dato|comparacion|cierre","narracion":"lo que dice la voz","titulo":"texto grande en pantalla, máx. 7 palabras","texto":"apoyo opcional, máx. 18 palabras",',
+    '{"layout":"portada|ilustracion|icono|lista|dato|comparacion|cierre","narracion":"lo que dice la voz","titulo":"texto grande en pantalla, máx. 7 palabras","texto":"apoyo opcional, máx. 18 palabras",',
     '"puntos":["solo en lista: 2 o 3 puntos de máx. 6 palabras"],"dato":"solo en dato: número corto como 3x, 80% o 24/7","izquierda":{"titulo":"solo en comparacion","texto":"máx. 12 palabras"},"derecha":{"titulo":"","texto":""},',
-    `"icono":"uno de: ${ICON_NAMES.join(", ")}","sfx":"whoosh|pop|ding|none"}]}`,
-    "Reglas: la primera escena es portada (gancho fuerte en los primeros 3 segundos) y la última es cierre (llamada a la acción). Varía los layouts.",
+    `"icono":"ícono principal","ilustracion":["1 a 4 íconos; en lista, uno por punto en el mismo orden"],"imagen":"in English: a short visual description of a flat illustration that shows what the narration says, no text, no people's faces","sfx":"whoosh|pop|ding|none"}]}`,
+    `Íconos permitidos (usa solo estos nombres exactos): ${ICON_NAMES.join(", ")}.`,
+    "Reglas: la primera escena es portada (gancho fuerte en los primeros 3 segundos) y la última es cierre (llamada a la acción). Varía los layouts y usa «ilustracion» en al menos 2 escenas.",
     "Cada escena dura entre 6 y 14 segundos de narración. Incluye de 5 a 10 hashtags.",
   ].join("\n");
 
@@ -113,7 +120,7 @@ export async function POST(request: Request) {
     const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
     const msg = await anthropic.messages.create({
       model: MODEL,
-      max_tokens: 6000,
+      max_tokens: 9000,
       system,
       messages: [{ role: "user", content: prompt }],
     });
@@ -151,6 +158,8 @@ export async function POST(request: Request) {
       voice,
       palette,
       scenes,
+      style,
+      ai_images: aiImages,
     })
     .select("*")
     .single();

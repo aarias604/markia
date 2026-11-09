@@ -60,7 +60,7 @@ export default function TiendaPage() {
   return (
     <div>
       <h1 className="text-2xl font-bold">Tienda</h1>
-      <p className="mb-8 mt-1 text-[#4A154B]/70">Extras para tu marca. Pago único con Yappy, tarjeta o cripto.</p>
+      <p className="mb-8 mt-1 text-[#4A154B]/70">Extras para tu marca. Pago único con Yappy o cripto (tarjeta: próximamente).</p>
 
       <CardReturnNotice />
 

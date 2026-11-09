@@ -24,6 +24,7 @@ export default function SubirPage() {
   const [hashtags, setHashtags] = useState("");
   const [when, setWhen] = useState("");
   const [auto, setAuto] = useState(false);
+  const [alsoFb, setAlsoFb] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [created, setCreated] = useState<Post[]>([]);
@@ -83,7 +84,7 @@ export default function SubirPage() {
       const blobs = [];
       for (const f of files) blobs.push(await fileToJpeg(f, placement));
       const media_paths = await uploadPostMedia(blobs, userId, post.id);
-      const { data: updated, error: upErr } = await supabase.from("posts").update({ media_paths, auto_publish: auto && !!when }).eq("id", post.id).select("*").single();
+      const { data: updated, error: upErr } = await supabase.from("posts").update({ media_paths, auto_publish: auto && !!when, also_facebook: auto && !!when && alsoFb && !!instagram?.fb_page_name }).eq("id", post.id).select("*").single();
       if (upErr) throw new Error(upErr.message);
 
       setCreated((c) => [updated as Post, ...c]);
@@ -176,6 +177,17 @@ export default function SubirPage() {
               <input type="checkbox" className="h-4 w-4 accent-[#4A154B]" checked={auto} onChange={(e) => setAuto(e.target.checked)} />
               <Send className="h-4 w-4" /> Publicar automáticamente en <strong>@{instagram?.username}</strong>
             </label>
+          ) : null
+        ) : null}
+        {planHasAutopost && canAutopost && auto && instagram?.fb_page_name && (
+          <label className="flex items-center gap-2 pl-6 text-sm">
+            <input type="checkbox" className="h-4 w-4 accent-[#4A154B]" checked={alsoFb} onChange={(e) => setAlsoFb(e.target.checked)} />
+            También en la Página de Facebook <strong>{instagram.fb_page_name}</strong>
+          </label>
+        )}
+        {planHasAutopost ? (
+          canAutopost ? (
+            null
           ) : (
             <p className="text-sm"><Link href="/dashboard/instagram" className="font-semibold text-[#6B21A8] underline">Conecta tu Instagram</Link> para publicar automáticamente.</p>
           )

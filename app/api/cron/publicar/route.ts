@@ -1,6 +1,7 @@
 // GET /api/cron/publicar · Vercel Cron cada 5 minutos (ver vercel.json).
 // Publica en Instagram las publicaciones programadas con "publicar automáticamente".
 import { NextResponse, type NextRequest } from "next/server";
+import { fbPublish } from "@/lib/facebook";
 import { igPublish } from "@/lib/instagram";
 import { layout, publishReminderEmail, sendOnce, siteUrl, userEmail, type ReminderPost } from "@/lib/notifications";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -18,6 +19,7 @@ interface DuePost {
   placement: "feed" | "story";
   media_paths: string[] | null;
   publish_attempts: number;
+  also_facebook: boolean;
 }
 
 export async function GET(request: NextRequest) {
@@ -29,7 +31,7 @@ export async function GET(request: NextRequest) {
   const admin = createAdminClient();
   const { data: due, error } = await admin
     .from("posts")
-    .select("id, user_id, title, caption, hashtags, placement, media_paths, publish_attempts")
+    .select("id, user_id, title, caption, hashtags, placement, media_paths, publish_attempts, also_facebook")
     .eq("auto_publish", true)
     .eq("status", "scheduled")
     .lte("scheduled_at", new Date().toISOString())
@@ -58,7 +60,7 @@ export async function GET(request: NextRequest) {
 
       const { data: account } = await admin
         .from("instagram_accounts")
-        .select("access_token, token_expires_at, api_mode, ig_user_id")
+        .select("access_token, token_expires_at, api_mode, ig_user_id, fb_page_id, fb_page_token")
         .eq("user_id", post.user_id)
         .maybeSingle();
       if (!account) throw new Error("Tu cuenta de Instagram no está conectada.");
@@ -84,6 +86,17 @@ export async function GET(request: NextRequest) {
         .from("posts")
         .update({ status: "published", published_at: new Date().toISOString(), instagram_media_id: mediaId, ig_permalink: permalink, error_message: null })
         .eq("id", post.id);
+
+      // También en la Página de Facebook (si se pidió). Un error aquí no deshace lo de Instagram.
+      if (post.also_facebook) {
+        try {
+          if (!account.fb_page_id || !account.fb_page_token) throw new Error("No hay una Página de Facebook conectada. Vuelve a conectar tu cuenta.");
+          const fb = await fbPublish({ pageId: account.fb_page_id, token: account.fb_page_token, placement: post.placement, imageUrls: urls, caption });
+          await admin.from("posts").update({ fb_post_id: fb.postId, fb_permalink: fb.permalink, fb_error: null }).eq("id", post.id);
+        } catch (fbErr) {
+          await admin.from("posts").update({ fb_error: (fbErr instanceof Error ? fbErr.message : "Error en Facebook").slice(0, 300) }).eq("id", post.id);
+        }
+      }
       results.push({ id: post.id, ok: true });
     } catch (e) {
       const message = e instanceof Error ? e.message : "Error desconocido";

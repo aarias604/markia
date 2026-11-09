@@ -39,6 +39,8 @@ export function PostCard({ post, onUpdated, onDeleted }: Props) {
   const [when, setWhen] = useState(post.scheduled_at ? toLocalInputValue(post.scheduled_at) : "");
   const [placement, setPlacement] = useState<Placement>(post.placement ?? "feed");
   const [auto, setAuto] = useState<boolean>(!!post.auto_publish && canAutopost);
+  const fbPage = instagram?.fb_page_name ?? null;
+  const [alsoFb, setAlsoFb] = useState<boolean>(post.also_facebook ?? !!fbPage);
   const [busy, setBusy] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -101,7 +103,7 @@ export function PostCard({ post, onUpdated, onDeleted }: Props) {
         if (auto) throw err; // sin imágenes no se puede publicar solo
       }
       const status: PostStatus = post.status === "published" ? "published" : "scheduled";
-      await save({ scheduled_at: at.toISOString(), status, placement, auto_publish: auto, media_paths, publish_attempts: 0, error_message: null } as Partial<Post>);
+      await save({ scheduled_at: at.toISOString(), status, placement, auto_publish: auto, also_facebook: auto && alsoFb && !!fbPage, media_paths, publish_attempts: 0, error_message: null } as Partial<Post>);
     } catch (e) {
       setError(e instanceof Error ? e.message : "No se pudo programar.");
       setBusy(false);
@@ -220,6 +222,12 @@ export function PostCard({ post, onUpdated, onDeleted }: Props) {
           </span>
         </div>
 
+        {post.fb_permalink && (
+          <a href={post.fb_permalink} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm font-semibold text-[#1877F2] underline">
+            Ver en Facebook
+          </a>
+        )}
+        {post.fb_error && <p className="text-xs text-amber-800">Facebook: {post.fb_error}</p>}
         {post.ig_permalink && (
           <a href={post.ig_permalink} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm font-semibold text-[#6B21A8] underline">
             Ver en Instagram <ExternalLink className="h-3.5 w-3.5" />
@@ -305,6 +313,23 @@ export function PostCard({ post, onUpdated, onDeleted }: Props) {
                   {!isUpload && <span className="block text-xs text-[#4A154B]/60">Si cambias el texto de la imagen, vuelve a pulsar «Programar».</span>}
                 </span>
               </label>
+            ) : null
+          ) : null}
+          {planHasAutopost && canAutopost && auto && (
+            fbPage ? (
+              <label className="flex items-start gap-2 pl-6 text-sm">
+                <input type="checkbox" className="mt-0.5 h-4 w-4 accent-[#4A154B]" checked={alsoFb} onChange={(e) => setAlsoFb(e.target.checked)} />
+                <span>También en la Página de Facebook <strong>{fbPage}</strong></span>
+              </label>
+            ) : (
+              <p className="pl-6 text-xs text-[#4A154B]/60">
+                Para publicar también en Facebook, <Link href="/dashboard/instagram" className="font-semibold text-[#6B21A8] underline">vuelve a conectar tu cuenta</Link>.
+              </p>
+            )
+          )}
+          {planHasAutopost ? (
+            canAutopost ? (
+              null
             ) : (
               <p className="text-xs text-[#4A154B]/70">
                 <Link href="/dashboard/instagram" className="font-semibold text-[#6B21A8] underline">Conecta tu Instagram</Link> para publicar automáticamente.

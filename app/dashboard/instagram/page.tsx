@@ -59,6 +59,13 @@ export default function InstagramPage() {
           <p className="text-sm text-[#4A154B]/70">
             La conexión se renueva sola. Vence el {expires?.toLocaleDateString("es-PA", { day: "numeric", month: "long", year: "numeric" })} si no se renueva.
           </p>
+          {instagram.fb_page_name ? (
+            <p className="text-sm">📘 También puede publicar en tu Página de Facebook <strong>{instagram.fb_page_name}</strong>.</p>
+          ) : (
+            <p className="text-sm text-[#4A154B]/70">
+              📘 Para publicar también en tu Página de Facebook, vuelve a conectar y acepta el permiso de publicar en Páginas.
+            </p>
+          )}
           {instagram.last_error && (
             <p className="flex gap-2 text-sm text-amber-800"><AlertTriangle className="h-4 w-4 shrink-0" /> {instagram.last_error} — vuelve a conectar tu cuenta.</p>
           )}
@@ -89,6 +96,7 @@ export default function InstagramPage() {
           <li>En cada publicación eliges <strong>Publicación</strong> o <strong>Historia</strong>, la fecha y la hora, y marcas «Publicar automáticamente».</li>
           <li>Markia revisa cada 5 minutos y publica las que ya llegaron a su hora.</li>
           <li>Las historias se publican sin descripción; Instagram no permite stickers ni enlaces por esta vía.</li>
+          <li>Puedes publicar a la vez en tu Página de Facebook (no en perfiles personales: Meta no lo permite).</li>
           <li>Si algo falla, lo reintentamos hasta 3 veces y te avisamos por correo.</li>
         </ul>
       </div>

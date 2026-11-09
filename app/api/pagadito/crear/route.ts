@@ -15,7 +15,9 @@ const KIND_LABEL: Record<string, string> = {
 };
 
 export async function POST(request: Request) {
-  if (!pagaditoConfigured()) return fail("El pago con tarjeta aún no está disponible.", 503);
+  if (!pagaditoConfigured() || process.env.NEXT_PUBLIC_PAGADITO_ENABLED !== "true") {
+    return fail("El pago con tarjeta estará disponible muy pronto.", 503);
+  }
 
   const supabase = await createClient();
   const {

@@ -18,12 +18,13 @@ export function RemotionRoot() {
       defaultProps={{
         scenes: [
           { layout: "portada", narracion: "Te explico cómo crear contenido para tu negocio en cuatro pasos.", titulo: "Contenido en 4 pasos", texto: "más fácil de lo que crees", icono: "cohete", sfx: "whoosh" },
-          { layout: "lista", narracion: "Primero define tu idea: de qué trata, qué quieres mostrar y para quién es.", titulo: "Define tu idea", puntos: ["De qué trata", "Qué quieres mostrar", "Para quién"], icono: "idea", sfx: "whoosh" },
-          { layout: "icono", narracion: "Después elige los colores de tu marca para que todo se vea tuyo.", titulo: "Súmale tus colores", texto: "Tu paleta en cada escena", icono: "brillo", sfx: "whoosh" },
-          { layout: "dato", narracion: "Las cuentas que publican tres veces por semana crecen mucho más rápido.", titulo: "Publica con constancia", dato: "3x", icono: "crecimiento", sfx: "ding" },
+          { layout: "lista", narracion: "Primero define tu idea: de qué trata, qué quieres mostrar y para quién es.", titulo: "Define tu idea", puntos: ["De qué trata", "Qué quieres mostrar", "Para quién"], icono: "idea", ilustracion: ["idea", "camara", "equipo"], sfx: "whoosh" },
+          { layout: "ilustracion", narracion: "Después elige los colores de tu marca para que todo se vea tuyo.", titulo: "Súmale tus colores", texto: "Tu paleta en cada escena", icono: "brillo", ilustracion: ["brillo", "celular", "corazon", "estrella"], sfx: "whoosh" },
+          { layout: "dato", narracion: "Las cuentas que publican tres veces por semana crecen mucho más rápido.", titulo: "Publica con constancia", dato: "3x", icono: "crecimiento", ilustracion: ["crecimiento"], sfx: "ding" },
           { layout: "comparacion", narracion: "Antes tardabas horas editando. Ahora lo haces en minutos.", titulo: "Antes y ahora", izquierda: { titulo: "Antes", texto: "Horas editando cada video" }, derecha: { titulo: "Ahora", texto: "Listo en minutos con Markia" }, icono: "reloj", sfx: "pop" },
           { layout: "cierre", narracion: "Síguenos para más ideas como esta.", titulo: "Sigue a Markia", icono: "corazon", sfx: "pop" },
         ],
+        style: "pop",
         colors: { color_primary: "#4A154B", color_secondary: "#8C338A", color_accent: "#D9734E", color_cream: "#FAF5EF" },
         brandName: "Markia",
         handle: "markiapa",

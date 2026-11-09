@@ -22,7 +22,7 @@ interface DashboardData {
   kit: BrandKit | null;
   logoDataUrl: string | null;
   templates: Template[];
-  instagram: { username: string | null; token_expires_at: string; last_error: string | null } | null;
+  instagram: { username: string | null; token_expires_at: string; last_error: string | null; fb_page_name: string | null } | null;
   /** Cobro automático con tarjeta activo (Pagadito). */
   autopay: { mandate_id: string; plan_id: string; monthly_price_cents: number; next_charge_date: string | null; remaining: number; last_charge_date: string } | null;
 }
