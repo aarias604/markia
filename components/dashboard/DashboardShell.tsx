@@ -95,11 +95,14 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 
   const sidebar = (
     <div className="flex h-full flex-col bg-[#4A154B] p-4">
-      <div className="mb-8 px-2 pt-2">
+      <div className="mb-6 shrink-0 px-2 pt-2">
         <MarkiaLogo light />
       </div>
-      <NavLinks onNavigate={() => setOpen(false)} isAdmin={!!profile?.is_admin} />
-      <div className="mt-auto space-y-3 border-t border-white/10 pt-4">
+      {/* El menú se desplaza si hay muchas opciones; el pie (cerrar sesión) siempre queda visible. */}
+      <div className="-mx-2 min-h-0 flex-1 overflow-y-auto px-2 [scrollbar-color:rgba(255,255,255,.25)_transparent] [scrollbar-width:thin]">
+        <NavLinks onNavigate={() => setOpen(false)} isAdmin={!!profile?.is_admin} />
+      </div>
+      <div className="mt-4 shrink-0 space-y-3 border-t border-white/10 pt-4">
         <div className="flex flex-wrap gap-x-3 gap-y-1 px-2 text-[11px] text-[#FAF5EF]/50">
           {LEGAL_PAGES.slice(0, 3).map((p, i) => (
             <Link key={p.href} href={p.href} target="_blank" className="hover:text-[#FAF5EF]">

@@ -1,22 +1,21 @@
 // =====================================================================
 // Markia · Datos legales del negocio
-// ⚠️ COMPLETA ESTOS DATOS antes de lanzar. Aparecen en todas las páginas
-// legales y en el pie de página. Lo que está entre [corchetes] falta.
+// Aparecen en todas las páginas legales y en el pie de página.
 // =====================================================================
 
 export const LEGAL = {
   marca: "Markia",
   razonSocial: "SOLUCIONES INNOVADORAS PA",
-  ruc: "[8-1017-329] DV [44]",
-  avisoOperacion: "[8-1017-329-2026-574458179]",
+  ruc: "8-1017-329 DV 44",
+  avisoOperacion: "8-1017-329-2026-574458179",
   direccion: "Juan Diaz, Ciudad de Panamá, República de Panamá",
-  correoSoporte: "[hola@markiapa.com]",
-  correoPrivacidad: "[hola@markiapa.com]",
-  telefono: "[+507 6434-2146]",
+  correoSoporte: "hola@markiapa.com",
+  correoPrivacidad: "hola@markiapa.com",
+  telefono: "+507 6434-2146",
   sitio: "https://markiapa.com",
   /** Cámbiala cada vez que modifiques un documento legal. */
-  version: "2026-11-05",
-  actualizado: "5 de noviembre de 2026",
+  version: "2026-11-09",
+  actualizado: "9 de noviembre de 2026",
 } as const;
 
 // Reglas del negocio que aparecen en los documentos (mantener igual que en la base de datos).
