@@ -6,9 +6,9 @@
 
 export const LEGAL = {
   marca: "Markia",
-  razonSocial: "Adrian Arias",
-  ruc: "[RUC] DV [00]",
-  avisoOperacion: "[Número de Aviso de Operación]",
+  razonSocial: "SOLUCIONES INNOVADORAS PA",
+  ruc: "[8-1017-329] DV [44]",
+  avisoOperacion: "[8-1017-329-2026-574458179]",
   direccion: "Juan Diaz, Ciudad de Panamá, República de Panamá",
   correoSoporte: "[hola@markiapa.com]",
   correoPrivacidad: "[hola@markiapa.com]",
