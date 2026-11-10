@@ -1,6 +1,6 @@
 "use client";
 
-// Pago con tarjeta de crédito o débito (Pagadito). Lleva al cliente a la pantalla segura de Pagadito.
+// Pago con tarjeta de crédito o débito (Tilopay). Lleva al cliente a la pantalla segura de Tilopay.
 import { useState } from "react";
 import { CreditCard, Loader2, Lock, RefreshCw } from "lucide-react";
 import type { CheckoutRequest } from "@/components/billing/YappyCheckout";
@@ -16,7 +16,7 @@ export function CardPay({ request }: { request: CheckoutRequest }) {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/pagadito/crear", {
+      const res = await fetch("/api/tilopay/crear", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...request, autopay: recurring && autopay }),
@@ -38,7 +38,7 @@ export function CardPay({ request }: { request: CheckoutRequest }) {
           <span>
             <strong className="flex items-center gap-1"><RefreshCw className="h-3.5 w-3.5" /> Renovar automáticamente cada mes</strong>
             <span className="text-xs text-[#4A154B]/70">
-              Cobraremos tu mensualidad a esta tarjeta en cada fecha de pago. Puedes cancelarlo cuando quieras desde Planes.
+              Tilopay guardará tu tarjeta de forma segura y cobraremos tu mensualidad en cada fecha de pago. Puedes cancelarlo cuando quieras desde Planes.
             </span>
           </span>
         </label>
@@ -46,10 +46,10 @@ export function CardPay({ request }: { request: CheckoutRequest }) {
       <button onClick={pay} disabled={loading}
         className="flex w-full items-center justify-center gap-2 rounded-full bg-[#4A154B] px-5 py-3 text-sm font-bold text-[#FAF5EF] hover:bg-[#6B21A8] disabled:opacity-60">
         {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
-        {loading ? "Abriendo Pagadito…" : "Pagar con tarjeta"}
+        {loading ? "Abriendo Tilopay…" : "Pagar con tarjeta"}
       </button>
       <p className="flex items-center justify-center gap-1 text-center text-xs text-[#4A154B]/60">
-        <Lock className="h-3 w-3" /> Pago seguro con Pagadito. Markia nunca ve ni guarda los datos de tu tarjeta.
+        <Lock className="h-3 w-3" /> Pago seguro con Tilopay. Markia nunca ve ni guarda los datos de tu tarjeta.
       </p>
       {error && <p className={errorCls}>{error}</p>}
     </div>

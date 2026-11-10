@@ -1,0 +1,22 @@
+MARKIA · CAMBIO DE PAGADITO A TILOPAY
+=====================================
+
+Qué cambia
+- Pago con tarjeta (planes, cambio a PRO y Tienda) ahora se hace en la pantalla segura de Tilopay.
+- Renovación automática: si el cliente la activa, Tilopay guarda su tarjeta y Markia la cobra
+  sola en cada fecha de pago. Si el banco la rechaza, se reintenta 1 vez por día (máx. 3) y le
+  avisamos por correo. Después de 3 rechazos se desactiva.
+- Markia nunca ve el número de la tarjeta: solo guarda un "token", la marca y los últimos 4 dígitos.
+
+ARCHIVOS DEL PAQUETE (copiar encima, respetando las carpetas)
+- supabase/migrations/20261112000000_markia_fase19.sql
+- lib/tilopay.ts
+- lib/tilopay-sync.ts
+- app/api/tilopay/crear/route.ts
+- app/api/tilopay/retorno/route.ts
+- app/api/tilopay/cancelar/route.ts
+- app/api/cron/tilopay/route.ts
+- components/billing/CardPay.tsx
+- components/billing/CardReturnNotice.tsx
+- components/billing/AutopayCard.tsx
+- cambiar-a-tilopay.mjs   (va en la carpeta principal del proyecto)

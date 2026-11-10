@@ -10,7 +10,7 @@ const PROVEEDORES = [
   ["ElevenLabs", "Voz de los videos: recibe solo el texto de la narración", "Estados Unidos"],
   ["GitHub (Microsoft)", "Producción de los videos: recibe de forma temporal los textos de las escenas, tus colores, tu logo y la voz", "Estados Unidos"],
   ["Banco General · Yappy Comercial", "Procesamiento de pagos con Yappy", "Panamá"],
-  ["Pagadito", "Procesamiento de pagos con tarjeta y renovación automática. Los datos de tu tarjeta los recibe solo Pagadito", "El Salvador / Centroamérica"],
+  ["Tilopay", "Procesamiento de pagos con tarjeta y renovación automática. Los datos de tu tarjeta los recibe y guarda solo Tilopay", "Costa Rica / Centroamérica"],
   ["Lulubit", "Recepción de pagos con criptomonedas", "Panamá"],
   ["Resend", "Envío de correos (por ejemplo, tu paquete de marca)", "Estados Unidos"],
   ["Meta (Instagram)", "Publicación automática en tu cuenta, solo si la conectas. Guardamos tu usuario y un permiso de acceso que puedes revocar cuando quieras", "Estados Unidos"],
@@ -36,7 +36,7 @@ export default function PrivacidadPage() {
         <li><strong>Contenido:</strong> ideas que escribes, publicaciones generadas, imágenes que subes, fechas programadas.</li>
         <li><strong>Instagram (si lo conectas):</strong> tu usuario, el identificador de tu cuenta profesional, un permiso de acceso para publicar lo que programes y los enlaces de lo publicado. Puedes desconectarlo en cualquier momento; ver <a href="/legal/eliminacion-datos">Eliminación de datos</a>.</li>
         <li><strong>WhatsApp (si activas los avisos):</strong> tu número de celular, la fecha en que aceptaste recibir mensajes y el registro de los avisos enviados. Puedes desactivarlo en cualquier momento desde «Avisos WhatsApp».</li>
-        <li><strong>Pagos:</strong> número de celular de Yappy, montos, fechas, números de orden y confirmación. Para pagos con tarjeta: los identificadores y referencias que entrega Pagadito y las fechas de los cobros programados. Para pagos con cripto: red y comprobante de la transacción. No guardamos datos de tarjetas.</li>
+        <li><strong>Pagos:</strong> número de celular de Yappy, montos, fechas, números de orden y confirmación. Para pagos con tarjeta: el identificador (token) de la tarjeta guardada por Tilopay, su marca, sus últimos 4 dígitos y las referencias de cada cobro. Para pagos con cripto: red y comprobante de la transacción. No guardamos datos de tarjetas.</li>
         <li><strong>Programa de referidos:</strong> quién te refirió, tus comisiones y, si pides un retiro, los datos bancarios o la dirección de billetera que nos des.</li>
         <li><strong>Técnicos:</strong> la información mínima que requieren las cookies esenciales de sesión y los registros de seguridad del servidor.</li>
       </ul>

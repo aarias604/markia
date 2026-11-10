@@ -1,6 +1,6 @@
 "use client";
 
-// Ventana de pago: Yappy (<btn-yappy>), tarjeta (Pagadito) o cripto (USDT).
+// Ventana de pago: Yappy (<btn-yappy>), tarjeta (Tilopay) o cripto (USDT).
 // 1) Al tocar el botón, crea la orden en /api/yappy/create-order.
 // 2) Yappy cobra en el celular del cliente.
 // 3) Esperamos la confirmación (IPN) consultando /api/yappy/status.
@@ -10,7 +10,7 @@ import { CheckCircle2, Clock, Loader2, Smartphone, X } from "lucide-react";
 import { useDashboard } from "@/components/dashboard/DashboardContext";
 import { CardPay } from "@/components/billing/CardPay";
 
-/** El pago con tarjeta (Pagadito) se activa con NEXT_PUBLIC_PAGADITO_ENABLED=true en Vercel. */
+/** El pago con tarjeta (Tilopay) se activa con NEXT_PUBLIC_TILOPAY_ENABLED=true en Vercel. */
 const CARD_ENABLED = process.env.NEXT_PUBLIC_PAGADITO_ENABLED === "true";
 import { CryptoPay } from "@/components/billing/CryptoPay";
 import { errorCls, inputCls, labelCls } from "@/lib/ui";

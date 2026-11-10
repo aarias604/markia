@@ -1,6 +1,6 @@
-// POST /api/pagadito/cancelar · El cliente desactiva su cobro automático con tarjeta.
+// POST /api/tilopay/cancelar · El cliente desactiva su cobro automático con tarjeta.
 import { NextResponse } from "next/server";
-import { cancelMandate } from "@/lib/pagadito-sync";
+import { cancelMandate } from "@/lib/tilopay-sync";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -19,14 +19,6 @@ export async function POST() {
     .eq("purpose", "subscription")
     .eq("status", "active");
 
-  for (const m of mandates ?? []) {
-    try {
-      await cancelMandate(admin, m.id);
-    } catch (e) {
-      // Si Pagadito no responde, lo reintenta la tarea de cada hora.
-      console.error("[pagadito] cancelar:", e);
-      await admin.from("card_mandates").update({ cancel_requested: true }).eq("id", m.id);
-    }
-  }
+  for (const m of mandates ?? []) await cancelMandate(admin, m.id);
   return NextResponse.json({ ok: true });
 }

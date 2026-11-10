@@ -18,7 +18,7 @@ export function AutopayCard() {
   async function cancel() {
     setBusy(true);
     setError(null);
-    const res = await fetch("/api/pagadito/cancelar", { method: "POST" });
+    const res = await fetch("/api/tilopay/cancelar", { method: "POST" });
     setBusy(false);
     if (!res.ok) return setError("No se pudo cancelar. Inténtalo de nuevo o escríbenos a hola@markiapa.com.");
     setConfirm(false);
@@ -28,12 +28,19 @@ export function AutopayCard() {
   return (
     <div className={`${cardCls} mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between`}>
       <div>
-        <p className="flex items-center gap-2 font-semibold"><CreditCard className="h-5 w-5 text-[#8C338A]" /> Cobro automático con tarjeta activo</p>
+        <p className="flex items-center gap-2 font-semibold">
+          <CreditCard className="h-5 w-5 text-[#8C338A]" /> Cobro automático con tarjeta activo
+          {autopay.card_last4 && (
+            <span className="text-sm font-normal text-[#4A154B]/70">· {autopay.card_brand ?? "Tarjeta"} terminada en {autopay.card_last4}</span>
+          )}
+        </p>
         <p className="mt-1 text-sm text-[#4A154B]/70">
           {autopay.next_charge_date
             ? <>Próximo cobro: <strong>{formatUSD(autopay.monthly_price_cents)}</strong> el {formatDateEs(autopay.next_charge_date)}. </>
             : null}
-          Quedan {autopay.remaining} cobro(s) programados, hasta el {formatDateEs(autopay.last_charge_date)}.
+          {autopay.remaining != null && autopay.last_charge_date
+            ? <>Quedan {autopay.remaining} cobro(s) programados, hasta el {formatDateEs(autopay.last_charge_date)}.</>
+            : <>Se renueva cada mes hasta que lo canceles.</>}
         </p>
         {error && <p className={`${errorCls} mt-2`}>{error}</p>}
       </div>
