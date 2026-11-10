@@ -123,6 +123,10 @@ export function suspendedEmail(name: string, originalCents: number, offerCents: 
 
 const ADDON_NAMES: Record<string, string> = {
   posts_boost_5: "Boost de 5 publicaciones",
+  posts_boost_10: "Boost de 10 publicaciones",
+  posts_boost_20: "Boost de 20 publicaciones",
+  video_pack_3: "Paquete de 3 videos",
+  video_pack_10: "Paquete de 10 videos",
   template_pack: "Pack de Plantillas",
   logo_service: "Generación de Marca con IA",
 };

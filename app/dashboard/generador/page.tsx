@@ -157,7 +157,7 @@ export default function GeneradorPage() {
         {noQuota ? (
           <p className="text-sm text-[#4A154B]/70">
             {formato === "single"
-              ? "Usaste todas tus publicaciones de este ciclo. Puedes comprar un Boost de 5 en la Tienda."
+              ? "Usaste todas tus publicaciones de este ciclo. Puedes comprar un Boost de 5, 10 o 20 en la Tienda."
               : "Usaste tus carruseles de este ciclo. Se renuevan con tu próximo ciclo."}
           </p>
         ) : (

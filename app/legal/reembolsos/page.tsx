@@ -36,7 +36,8 @@ export default function ReembolsosPage() {
 
       <h2>4. Reembolsos de servicios adicionales</h2>
       <ul>
-        <li><strong>Boost de 5 publicaciones:</strong> reembolsable solo si no has usado ninguna de las 5.</li>
+        <li><strong>Boost de publicaciones (5, 10 o 20):</strong> reembolsable solo si no has usado ninguna de las publicaciones compradas.</li>
+        <li><strong>Paquetes de videos (3 o 10):</strong> reembolsable solo si no has creado ningún video con el paquete.</li>
         <li><strong>Pack de Plantillas:</strong> reembolsable solo si no has creado plantillas con los espacios comprados.</li>
         <li><strong>Generación de Marca con IA:</strong> reembolsable completo mientras no hayas generado tu marca; una vez generada, no es reembolsable porque el servicio ya se prestó.</li>
       </ul>
