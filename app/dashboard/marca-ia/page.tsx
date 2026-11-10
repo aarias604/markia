@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
-import { Check, Copy, Download, Loader2, Mail, RefreshCw, Sparkles, Wand2 } from "lucide-react";
+import { Check, Copy, Download, Loader2, Mail, Palette, Plus, RefreshCw, Sparkles, Wand2 } from "lucide-react";
 import { useDashboard } from "@/components/dashboard/DashboardContext";
 import { InlineLoader } from "@/components/ui/Loader";
 import type { BrandBrief, BrandResult } from "@/lib/brand-ai";
@@ -25,10 +25,17 @@ const ESTILOS = ["Moderno", "Minimalista", "Clásico y elegante", "Divertido y c
 
 export default function MarcaIAPage() {
   const [packages, setPackages] = useState<BrandPackage[] | null>(null);
+  const [savedPalettes, setSavedPalettes] = useState<Set<string>>(new Set());
+  const [selected, setSelected] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    const { data } = await createClient().from("brand_packages").select("*").order("created_at", { ascending: false });
+    const supabase = createClient();
+    const [{ data }, { data: pals }] = await Promise.all([
+      supabase.from("brand_packages").select("*").order("created_at", { ascending: false }),
+      supabase.from("brand_palettes").select("package_id").not("package_id", "is", null),
+    ]);
     setPackages((data as BrandPackage[]) ?? []);
+    setSavedPalettes(new Set(((pals ?? []) as { package_id: string }[]).map((p) => p.package_id)));
   }, []);
 
   useEffect(() => {
@@ -37,34 +44,69 @@ export default function MarcaIAPage() {
 
   if (packages === null) return <InlineLoader />;
 
+  const pending = packages.filter((p) => p.status === "awaiting_brief" || p.status === "failed");
+  const kits = packages.filter((p) => p.status === "ready" || p.status === "generating");
+  // Por defecto: el kit por crear (recién comprado) o el más reciente.
+  const current = selected ?? (pending[0] ? "nuevo" : kits[0]?.id ?? "nuevo");
+  const shown = kits.find((k) => k.id === current);
+  const label = (p: BrandPackage) =>
+    `${p.brief?.nombre || "Kit"} · ${new Date(p.created_at).toLocaleDateString("es-PA", { day: "numeric", month: "short" })}`;
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div>
         <h1 className="flex items-center gap-2 text-2xl font-bold"><Wand2 className="h-6 w-6 text-[#8C338A]" /> Marca con IA</h1>
         <p className="mt-1 text-[#4A154B]/70">
           Logo en 3 versiones, paleta de colores, tipografías y guía de uso, creados por IA y enviados a tu correo.
+          Cada kit que creas se guarda aquí y su paleta queda disponible al generar imágenes y videos.
         </p>
       </div>
 
-      {packages.length === 0 && (
-        <div className={`${cardCls} text-center`}>
-          <p className="font-semibold">Aún no tienes un paquete de marca.</p>
-          <p className="mt-1 text-sm text-[#4A154B]/70">Cómpralo en la Tienda y vuelve aquí para crearlo.</p>
-          <Link href="/dashboard/tienda" className={`${btnGold} mt-4`}>Ir a la Tienda</Link>
+      {(kits.length > 0 || pending.length > 0) && (
+        <div className="flex flex-wrap gap-2">
+          {kits.map((k) => (
+            <button
+              key={k.id}
+              onClick={() => setSelected(k.id)}
+              className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                current === k.id ? "bg-[#4A154B] text-[#FAF5EF]" : "border border-[#4A154B]/20 bg-white text-[#4A154B] hover:border-[#4A154B]/50"
+              }`}
+            >
+              {k.status === "generating" && <Loader2 className="mr-1 inline h-3.5 w-3.5 animate-spin" />}
+              {label(k)}
+            </button>
+          ))}
+          <button
+            onClick={() => setSelected("nuevo")}
+            className={`inline-flex items-center gap-1 rounded-full px-4 py-2 text-sm font-semibold transition ${
+              current === "nuevo" ? "bg-[#D9B382] text-[#4A154B]" : "border border-dashed border-[#4A154B]/40 bg-white text-[#4A154B] hover:border-[#4A154B]"
+            }`}
+          >
+            <Plus className="h-4 w-4" /> Nuevo kit{pending.length > 0 && ` (${pending.length} disponible${pending.length > 1 ? "s" : ""})`}
+          </button>
         </div>
       )}
 
-      {packages.map((p) =>
-        p.status === "ready" && p.result ? (
-          <ResultView key={p.id} pkg={p} onChange={load} />
-        ) : p.status === "generating" ? (
-          <div key={p.id} className={`${cardCls} flex items-center gap-3`}>
-            <Loader2 className="h-5 w-5 animate-spin" /> Tu marca se está generando… recarga la página en un minuto.
-          </div>
+      {current === "nuevo" ? (
+        pending[0] ? (
+          <BriefForm key={pending[0].id} pkg={pending[0]} onDone={async () => { setSelected(pending[0].id); await load(); }} />
         ) : (
-          <BriefForm key={p.id} pkg={p} onDone={load} />
+          <div className={`${cardCls} text-center`}>
+            <p className="font-semibold">{kits.length ? "¿Quieres otra marca o una variante?" : "Aún no tienes un kit de marca."}</p>
+            <p className="mt-1 text-sm text-[#4A154B]/70">
+              Compra un kit de Marca con IA en la Tienda y vuelve aquí para crearlo.{" "}
+              {kits.length > 0 && "Tus kits anteriores se conservan."}
+            </p>
+            <Link href="/dashboard/tienda" className={`${btnGold} mt-4`}>{kits.length ? "Comprar otro kit" : "Ir a la Tienda"}</Link>
+          </div>
         )
-      )}
+      ) : shown?.status === "generating" ? (
+        <div className={`${cardCls} flex items-center gap-3`}>
+          <Loader2 className="h-5 w-5 animate-spin" /> Tu marca se está generando… recarga la página en un minuto.
+        </div>
+      ) : shown?.result ? (
+        <ResultView key={shown.id} pkg={shown} paletteSaved={savedPalettes.has(shown.id)} onChange={load} />
+      ) : null}
     </div>
   );
 }
@@ -140,7 +182,7 @@ function BriefForm({ pkg, onDone }: { pkg: BrandPackage; onDone: () => Promise<v
   );
 }
 
-function ResultView({ pkg, onChange }: { pkg: BrandPackage; onChange: () => Promise<void> }) {
+function ResultView({ pkg, paletteSaved, onChange }: { pkg: BrandPackage; paletteSaved: boolean; onChange: () => Promise<void> }) {
   const { userId, refresh } = useDashboard();
   const r = pkg.result!;
   const name = slugify(pkg.brief?.nombre ?? "marca");
@@ -163,7 +205,7 @@ function ResultView({ pkg, onChange }: { pkg: BrandPackage; onChange: () => Prom
       const { error } = await supabase.from("brand_kits").upsert({ user_id: userId, logo_path: path, ...r.kit }, { onConflict: "user_id" });
       if (error) throw new Error(error.message);
       await refresh();
-      setMsg({ ok: true, text: "¡Listo! Tus publicaciones ahora usan este logo y estos colores." });
+      setMsg({ ok: true, text: "¡Listo! Este logo y estos colores son ahora tu marca principal." });
     } catch (e) {
       setMsg({ ok: false, text: e instanceof Error ? e.message : "No se pudo aplicar." });
     } finally {
@@ -198,7 +240,12 @@ function ResultView({ pkg, onChange }: { pkg: BrandPackage; onChange: () => Prom
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
           <button className={btnGold} onClick={applyToKit} disabled={!!busy}>
-            {busy === "apply" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />} Usar en mi Kit de marca
+            {busy === "apply" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />} Usar como marca principal
+          </button>
+          <button className={btnSecondary} disabled={!!busy || paletteSaved}
+            onClick={() => post("/api/marca-ia/paleta", { packageId: pkg.id }, "pal", "Paleta guardada. Elígela en «Paleta de colores» al generar imágenes y videos.")}>
+            {busy === "pal" ? <Loader2 className="h-4 w-4 animate-spin" /> : paletteSaved ? <Check className="h-4 w-4" /> : <Palette className="h-4 w-4" />}
+            {paletteSaved ? "Paleta guardada en Mis paletas" : "Guardar en Mis paletas"}
           </button>
           <button className={btnSecondary} disabled={!!busy}
             onClick={() => post("/api/marca-ia/reenviar", { packageId: pkg.id }, "mail", "Correo enviado.")}>

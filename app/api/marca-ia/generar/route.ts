@@ -1,6 +1,7 @@
 // POST /api/marca-ia/generar · Genera (o ajusta) el paquete de marca con IA y lo envía por correo.
 import { NextResponse } from "next/server";
 import { brandEmail, generateBrand, type BrandBrief, type BrandResult } from "@/lib/brand-ai";
+import { savePackagePalette } from "@/lib/brand-palette";
 import { sendEmail } from "@/lib/email";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -93,10 +94,13 @@ export async function POST(request: Request) {
     .single();
   if (error) return fail(error.message, 500);
 
+  // La paleta del kit queda en «Mis paletas» para elegirla al generar imágenes y videos.
+  const palette = await savePackagePalette(admin, user.id, pkg.id, brief.nombre, result);
+
   const site = (process.env.NEXT_PUBLIC_SITE_URL ?? "").replace(/\/+$/, "");
   const mail = brandEmail(brief, result, site);
   const sent = await sendEmail({ to: brief.correo, ...mail });
   if (sent.ok) await admin.from("brand_packages").update({ emailed_at: new Date().toISOString() }).eq("id", pkg.id);
 
-  return NextResponse.json({ package: updated, emailed: sent.ok, emailError: sent.error });
+  return NextResponse.json({ package: updated, emailed: sent.ok, emailError: sent.error, paletteSaved: palette.ok, paletteError: palette.error });
 }

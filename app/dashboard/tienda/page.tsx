@@ -55,9 +55,9 @@ const INFO: Record<string, { icon: typeof Zap; text: string; needsPlan: boolean;
   },
   logo_service: {
     icon: Palette,
-    text: "La IA crea tu logo en 3 versiones (principal, ícono y monocromo), una paleta de 5 colores, 2 tipografías y una guía de uso. Lo recibes al instante en tu correo y en tu cuenta. Incluye 1 ajuste.",
+    text: "La IA crea tu logo en 3 versiones (principal, ícono y monocromo), una paleta de 5 colores, 2 tipografías y una guía de uso. Lo recibes al instante en tu correo y en tu cuenta. Incluye 1 ajuste. Puedes comprar varios: cada kit se guarda y su paleta queda lista para tus imágenes y videos.",
     needsPlan: false,
-    after: "¡Pago confirmado! Entra a «Marca con IA» en el menú para crear tu marca.",
+    after: "¡Pago confirmado! Entra a «Marca con IA» y toca «Nuevo kit» para crear tu marca.",
   },
 };
 
