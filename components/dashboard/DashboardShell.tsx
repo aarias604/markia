@@ -15,6 +15,7 @@ import {
   Palette,
   Gift,
   ShieldCheck,
+  Users,
   ShoppingBag,
   Send,
   Sparkles,
@@ -53,6 +54,7 @@ function NavLinks({ onNavigate, isAdmin }: { onNavigate?: () => void; isAdmin: b
         ...NAV,
         { href: "/dashboard/instagram", label: "Instagram (pruebas)", icon: Send },
         { href: "/dashboard/admin", label: "Administración", icon: ShieldCheck },
+        { href: "/dashboard/admin/clientes", label: "Clientes", icon: Users },
         { href: "/dashboard/admin/precios", label: "Precios y promos", icon: Tag },
       ]
     : NAV;
