@@ -11,7 +11,7 @@ import { useDashboard } from "@/components/dashboard/DashboardContext";
 import { CardPay } from "@/components/billing/CardPay";
 
 /** El pago con tarjeta (Tilopay) se activa con NEXT_PUBLIC_TILOPAY_ENABLED=true en Vercel. */
-const CARD_ENABLED = process.env.NEXT_PUBLIC_PAGADITO_ENABLED === "true";
+const CARD_ENABLED = process.env.NEXT_PUBLIC_TILOPAY_ENABLED === "true";
 import { CryptoPay } from "@/components/billing/CryptoPay";
 import { errorCls, inputCls, labelCls } from "@/lib/ui";
 
