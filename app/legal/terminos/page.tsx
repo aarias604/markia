@@ -35,8 +35,8 @@ export default function TerminosPage() {
       <h2>4. Planes, precios y forma de pago</h2>
       <ul>
         <li>
-          <strong>Plan Básico:</strong> 10 publicaciones, 1 carrusel y 1 video explicativo con IA por ciclo, y 10 plantillas.{" "}
-          <strong>Plan PRO:</strong> 26 publicaciones, 3 carruseles y 3 videos explicativos con IA por ciclo, 20 plantillas y 5 plantillas
+          <strong>Plan Básico:</strong> 15 publicaciones, 1 carrusel y 1 video explicativo con IA por ciclo, y 10 plantillas.{" "}
+          <strong>Plan PRO:</strong> 35 publicaciones, 3 carruseles y 3 videos explicativos con IA por ciclo, 20 plantillas y 5 plantillas
           propias. La publicación automática en Instagram del Plan PRO está en desarrollo; mientras no esté disponible,
           puedes descargar cada publicación con su descripción sugerida. Los precios vigentes se muestran en la página de
           Planes antes de pagar.
